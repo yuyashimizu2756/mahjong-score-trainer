@@ -9,6 +9,8 @@ export interface ThreeHandProps {
   melds?: readonly Meld[];
   winTile?: Tile;
   doraIndicator?: Tile;
+  /** 和了牌を 13 枚から分離して gap 付きで置く。 */
+  separateWin?: boolean;
   /** WebGL の初期化に失敗したとき（CSS 3D へ戻す）。 */
   onFallback: () => void;
 }
@@ -27,6 +29,7 @@ export default function ThreeHand({
   melds = [],
   winTile,
   doraIndicator,
+  separateWin = false,
   onFallback,
 }: ThreeHandProps) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -63,9 +66,10 @@ export default function ThreeHand({
         melds,
         winTile,
         doraIndicator,
+        separateWin,
         maxPerRow: columns,
       }),
-    [concealed, melds, winTile, doraIndicator, columns],
+    [concealed, melds, winTile, doraIndicator, separateWin, columns],
   );
 
   const initialLayoutRef = useRef(layout);

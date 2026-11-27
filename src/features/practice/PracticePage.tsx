@@ -69,6 +69,41 @@ function difficultyDescription(difficulty: Difficulty): string {
   return '副露 0〜2・槓・本場・供託まで';
 }
 
+/** 翻数のチップ。4 択では出題時から、ステップでは翻の回答後に出す。 */
+export function HanChip({ problem }: { problem: Problem }) {
+  const { answer } = problem;
+  if (answer.yakumanCount > 0) {
+    return (
+      <span
+        data-testid="han-chip"
+        className="inline-flex items-center gap-1.5 rounded-full border border-gold/50 bg-gold/15 px-2.5 py-1 text-[11px] font-semibold text-gold"
+      >
+        {answer.yakumanCount > 1
+          ? `役満 ×${answer.yakumanCount}`
+          : '役満'}
+      </span>
+    );
+  }
+  const breakdown =
+    answer.doraHan > 0
+      ? `役 ${answer.yakuHan} + ドラ ${answer.doraHan}`
+      : `役 ${answer.yakuHan}`;
+  return (
+    <span
+      data-testid="han-chip"
+      className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-[11px] text-gold"
+    >
+      <span className="text-[9px] uppercase tracking-wide opacity-65">
+        翻数
+      </span>
+      <span className="font-semibold">
+        {answer.han}
+        <span className="ml-1 font-normal">（{breakdown}）</span>
+      </span>
+    </span>
+  );
+}
+
 export function PracticePage({
   settings,
   initialDifficulty,
@@ -340,6 +375,10 @@ export function PracticePage({
   const accuracy = percent(session.correct, session.total);
   const currentStep = steps[stepIndex];
   const stepNumber = stepIndex + 1;
+  const showHanChip =
+    settings.answerMode === 'choice' ||
+    stepIndex > 0 ||
+    stepFeedback !== null;
 
   return (
     <div className="space-y-5">
@@ -488,7 +527,11 @@ export function PracticePage({
             </div>
 
             <div className="space-y-4 p-4 sm:p-5">
-              <SituationChips ctx={problem.input.ctx} />
+              <SituationChips
+                ctx={problem.input.ctx}
+                concealed={problem.input.concealed}
+                melds={problem.input.melds}
+              />
 
               <div className="-mx-2 rounded-xl border border-ivory-200 bg-ivory-100/70 p-2 sm:mx-0 sm:p-4">
                 <HandStage
@@ -497,13 +540,17 @@ export function PracticePage({
                   winTile={problem.input.winTile}
                   doraIndicator={problem.input.ctx.doraIndicators[0]}
                   settings={settings}
+                  separateWin
                 />
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[15px] font-semibold text-ink-900">
-                  {targetText}
-                </p>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p className="text-[15px] font-semibold text-ink-900">
+                    {targetText}
+                  </p>
+                  {showHanChip ? <HanChip problem={problem} /> : null}
+                </div>
                 <div className="flex items-center gap-2">
                   {settings.answerMode === 'step' ? (
                     <ol

@@ -1,5 +1,6 @@
 import type { Meld, Tile as TileType } from '../engine/types';
 import { formatTiles, sameTile } from '../engine/tiles';
+import { tileJaLabel } from '../lib/tile-label';
 import { Tile } from './Tile';
 import type { TileSize } from './Tile';
 
@@ -10,6 +11,11 @@ export interface HandProps {
   winTile?: TileType;
   size?: TileSize;
   showSuitMark?: boolean;
+  /**
+   * 和了牌を手牌から分離して右端に「和了牌」として置く。
+   * 結果パネルの分解表示では false（既定）のまま 14 枚を並べる。
+   */
+  separateWin?: boolean;
   className?: string;
 }
 
@@ -36,13 +42,20 @@ export function Hand({
   winTile,
   size = 'md',
   showSuitMark = true,
+  separateWin = false,
   className = '',
 }: HandProps) {
   const highlight = winIndex(concealed, winTile);
+  const separated = separateWin && highlight >= 0;
+  const mainTiles = separated
+    ? concealed.filter((_, index) => index !== highlight)
+    : concealed;
+  const separatedTile = separated ? concealed[highlight] : undefined;
   const meldText = melds
     .map((meld) => `${MELD_LABEL[meld.type]} ${formatTiles(meld.tiles)}`)
     .join(' / ');
-  const label = `手牌 ${formatTiles(concealed)}${meldText ? ` / 副露 ${meldText}` : ''}`;
+  const winText = separatedTile ? ` / 和了牌 ${tileJaLabel(separatedTile)}` : '';
+  const label = `手牌 ${formatTiles(concealed)}${meldText ? ` / 副露 ${meldText}` : ''}${winText}`;
 
   return (
     <div
@@ -54,13 +67,16 @@ export function Hand({
         className,
       ].join(' ')}
     >
-      <div className="flex flex-wrap items-end gap-[2px]">
-        {concealed.map((tile, index) => (
+      <div
+        data-testid="hand-main"
+        className="flex flex-wrap items-end gap-[2px]"
+      >
+        {mainTiles.map((tile, index) => (
           <Tile
             key={`${tile.suit}${tile.rank}-${index}`}
             tile={tile}
             size={size}
-            highlight={index === highlight}
+            highlight={!separated && index === highlight}
             showSuitMark={showSuitMark}
           />
         ))}
@@ -83,6 +99,27 @@ export function Hand({
           ))}
         </div>
       ))}
+
+      {separatedTile ? (
+        <div
+          data-testid="hand-win"
+          aria-label={`和了牌 ${tileJaLabel(separatedTile)}`}
+          className="mt-1 flex w-full items-end gap-2 border-t border-dashed border-gold/40 pt-2 sm:mt-0 sm:w-auto sm:border-t-0 sm:border-l sm:border-solid sm:border-ink-500/30 sm:pl-3 sm:pt-0"
+        >
+          <span
+            aria-hidden="true"
+            className="mb-0.5 shrink-0 rounded-sm bg-gold px-1.5 py-0.5 text-[10px] font-bold leading-none text-ink-900"
+          >
+            和了牌
+          </span>
+          <Tile
+            tile={separatedTile}
+            size={size}
+            highlight
+            showSuitMark={showSuitMark}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

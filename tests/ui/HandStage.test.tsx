@@ -123,6 +123,25 @@ describe('練習の手牌表示モード', () => {
       });
     }
   });
+
+  it('練習の出題では和了牌を 13 枚から分離し、結果パネルは 14 枚のまま', async () => {
+    renderPractice('css3d');
+    expect(
+      screen.getByTestId('hand-main').querySelectorAll('[data-tile]'),
+    ).toHaveLength(13);
+    expect(
+      screen.getByTestId('hand-win').querySelectorAll('[data-tile]'),
+    ).toHaveLength(1);
+
+    fireEvent.click(correctChoice());
+    const panel = await screen.findByTestId('result-panel');
+    expect(within(panel).queryByTestId('hand-win')).not.toBeInTheDocument();
+    expect(
+      within(panel)
+        .getByTestId('hand-main')
+        .querySelectorAll('[data-tile]'),
+    ).toHaveLength(14);
+  });
 });
 
 describe('設定の表示モード', () => {

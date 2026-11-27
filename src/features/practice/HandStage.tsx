@@ -30,6 +30,8 @@ export interface HandStageProps {
   winTile?: Tile;
   doraIndicator?: Tile;
   settings: Settings;
+  /** 練習の出題カードでは和了牌を 13 枚から分離する。 */
+  separateWin?: boolean;
 }
 
 const MODE_LABEL: Record<Settings['displayMode'], string> = {
@@ -67,6 +69,7 @@ export function HandStage({
   winTile,
   doraIndicator,
   settings,
+  separateWin = true,
 }: HandStageProps) {
   const requested = settings.displayMode;
   const stageRef = useRef<HTMLDivElement>(null);
@@ -128,6 +131,7 @@ export function HandStage({
       winTile={winTile}
       size={settings.tileSize}
       showSuitMark={settings.colorBlindSuits}
+      separateWin={separateWin}
     />
   );
 
@@ -177,6 +181,7 @@ export function HandStage({
                 melds={melds}
                 winTile={winTile}
                 doraIndicator={doraIndicator}
+                separateWin={separateWin}
                 onFallback={() => setFailed(true)}
               />
             </SceneBoundary>

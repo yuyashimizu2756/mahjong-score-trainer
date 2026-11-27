@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { AppProvider } from '../../src/lib/store';
-import { PracticePage } from '../../src/features/practice/PracticePage';
+import { PracticePage, HanChip } from '../../src/features/practice/PracticePage';
 import { generateProblem } from '../../src/engine/problem';
 import {
   DEFAULT_SETTINGS,
@@ -320,5 +320,53 @@ describe('練習フロー', () => {
       fireEvent.click(screen.getByRole('button', { name: /次のステップへ/ }));
     }
     expectNumberedChoiceNames();
+  });
+
+  it('4 択では出題時から翻数チップを表示する', () => {
+    const problem = generateProblem({ difficulty: 'beginner', seed: SEED });
+    renderPractice();
+    const chip = screen.getByTestId('han-chip');
+    if (problem.answer.yakumanCount > 0) {
+      expect(chip).toHaveTextContent(
+        problem.answer.yakumanCount > 1
+          ? `役満 ×${problem.answer.yakumanCount}`
+          : '役満',
+      );
+      return;
+    }
+    const breakdown =
+      problem.answer.doraHan > 0
+        ? `役 ${problem.answer.yakuHan} + ドラ ${problem.answer.doraHan}`
+        : `役 ${problem.answer.yakuHan}`;
+    expect(chip).toHaveTextContent(
+      `翻数${problem.answer.han}（${breakdown}）`,
+    );
+  });
+
+  it('ステップでは翻の回答後に翻数チップを表示する', () => {
+    const problem = generateProblem({ difficulty: 'beginner', seed: SEED });
+    renderPractice({
+      settings: { ...DEFAULT_SETTINGS, answerMode: 'step' },
+    });
+    expect(screen.queryByTestId('han-chip')).not.toBeInTheDocument();
+    fireEvent.click(correctChoice());
+    const chip = screen.getByTestId('han-chip');
+    expect(chip).toHaveTextContent(`翻数${problem.answer.han}`);
+  });
+
+  it('役満は翻数 0 ではなく「役満 ×N」で表示する', () => {
+    const problem = generateProblem({ difficulty: 'beginner', seed: SEED });
+    const yakuman = {
+      ...problem,
+      answer: {
+        ...problem.answer,
+        han: 0,
+        yakuHan: 0,
+        doraHan: 0,
+        yakumanCount: 2,
+      },
+    };
+    render(<HanChip problem={yakuman} />);
+    expect(screen.getByTestId('han-chip')).toHaveTextContent('役満 ×2');
   });
 });
