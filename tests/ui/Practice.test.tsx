@@ -74,6 +74,18 @@ function wrongChoice(): HTMLElement {
   return choice;
 }
 
+function expectNumberedChoiceNames(): HTMLElement[] {
+  const choices = screen.getAllByTestId('choice');
+  choices.forEach((choice, index) => {
+    const number = index + 1;
+    const label = choice.getAttribute('aria-label') ?? '';
+    expect(label).toMatch(new RegExp(`^選択肢 ${number}: .+`));
+    expect(choice).toHaveAccessibleName(label);
+    expect(choice.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+  });
+  return choices;
+}
+
 describe('練習フロー', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -264,7 +276,7 @@ describe('練習フロー', () => {
 
   it('4 択の選択肢は重複せず、正解を 1 つ含む', () => {
     renderPractice();
-    const choices = screen.getAllByTestId('choice');
+    const choices = expectNumberedChoiceNames();
     expect(choices).toHaveLength(4);
     expect(
       choices.filter(
@@ -273,5 +285,40 @@ describe('練習フロー', () => {
     ).toHaveLength(1);
     const labels = choices.map((choice) => choice.getAttribute('aria-label'));
     expect(new Set(labels).size).toBe(4);
+  });
+
+  it('ツモの選択肢も「選択肢 N: 子 X / 親 Y」で読み上げる', () => {
+    let seed = 1;
+    let problem = generateProblem({ difficulty: 'beginner', seed });
+    while (
+      seed < 500 &&
+      (!problem.input.ctx.tsumo || problem.input.ctx.seatWind === 1)
+    ) {
+      seed += 1;
+      problem = generateProblem({ difficulty: 'beginner', seed });
+    }
+    expect(problem.input.ctx.tsumo).toBe(true);
+    expect(problem.input.ctx.seatWind).not.toBe(1);
+
+    renderPractice({ seed });
+    const labels = expectNumberedChoiceNames().map(
+      (choice) => choice.getAttribute('aria-label') ?? '',
+    );
+    expect(labels.some((label) => /^選択肢 \d: 子 [\d,]+ \/ 親 [\d,]+$/.test(label))).toBe(
+      true,
+    );
+  });
+
+  it('ステップ回答の各段でも「選択肢 N: 値」の読み上げ名になる', () => {
+    renderPractice({
+      settings: { ...DEFAULT_SETTINGS, answerMode: 'step' },
+    });
+
+    for (let step = 0; step < 2; step += 1) {
+      expectNumberedChoiceNames();
+      fireEvent.click(correctChoice());
+      fireEvent.click(screen.getByRole('button', { name: /次のステップへ/ }));
+    }
+    expectNumberedChoiceNames();
   });
 });

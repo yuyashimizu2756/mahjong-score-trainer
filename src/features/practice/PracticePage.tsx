@@ -569,7 +569,7 @@ export function PracticePage({
                       type="button"
                       data-testid="choice"
                       data-correct={choice.correct ? 'true' : 'false'}
-                      aria-label={choice.label}
+                      aria-label={`選択肢 ${index + 1}: ${choice.label}`}
                       aria-pressed={isSelected}
                       disabled={phase === 'result' || Boolean(stepFeedback)}
                       onClick={() => choose(choice)}
