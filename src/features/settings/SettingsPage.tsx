@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useAppData } from '../../lib/store';
-import { SCHEMA_VERSION } from '../../lib/storage';
+import {
+  SCHEMA_VERSION,
+  type DisplayMode,
+} from '../../lib/storage';
 import { Tile } from '../../components/Tile';
 import { Icon } from '../../components/Icon';
 import {
@@ -30,6 +33,91 @@ const TILE_SIZES = [
   { id: 'md' as const, label: '中', note: '44 × 62' },
   { id: 'lg' as const, label: '大', note: '58 × 80' },
 ];
+
+const DISPLAY_MODE_CARDS: Array<{
+  id: DisplayMode;
+  title: string;
+  body: string;
+}> = [
+  {
+    id: '2d',
+    title: '2D',
+    body: '軽量で読みやすい。手牌を傾けずに正面から表示します。',
+  },
+  {
+    id: 'css3d',
+    title: 'CSS 3D',
+    body: '既定。perspective で卓に置いたように傾けます。WebGL 不要。',
+  },
+  {
+    id: 'three',
+    title: 'リアル 3D',
+    body: 'Three.js の牌卓。ドラッグで視点を動かせます。WebGL が必要です。',
+  },
+];
+
+/** 設定画面のモード選択カードに置く小さなプレビュー。 */
+function DisplayModePreview({ mode }: { mode: DisplayMode }) {
+  const tiles = (
+    <>
+      <Tile
+        tile={{ suit: 'm', rank: 2 }}
+        size="sm"
+        showSuitMark={false}
+        className="mode-preview-tile"
+      />
+      <Tile
+        tile={{ suit: 'p', rank: 5 }}
+        size="sm"
+        showSuitMark={false}
+        className="mode-preview-tile"
+      />
+      <Tile
+        tile={{ suit: 'z', rank: 7 }}
+        size="sm"
+        showSuitMark={false}
+        className="mode-preview-tile"
+      />
+    </>
+  );
+
+  if (mode === 'three') {
+    return (
+      <span
+        aria-hidden="true"
+        data-testid="display-mode-preview"
+        data-preview="three"
+        className="mode-preview mode-preview--three"
+      >
+        <span className="mode-preview-3d">{tiles}</span>
+      </span>
+    );
+  }
+
+  if (mode === 'css3d') {
+    return (
+      <span
+        aria-hidden="true"
+        data-testid="display-mode-preview"
+        data-preview="css3d"
+        className="mode-preview mode-preview--css3d"
+      >
+        <span className="mode-preview-plane">{tiles}</span>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      data-testid="display-mode-preview"
+      data-preview="2d"
+      className="mode-preview mode-preview--2d"
+    >
+      {tiles}
+    </span>
+  );
+}
 
 const RULE_POINTS = [
   '和了は「4 面子 + 1 雀頭」「七対子」「国士無双」のいずれか。',
@@ -154,6 +242,51 @@ export function SettingsPage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="card p-5">
+        <h2 className="text-[17px] text-ink-900">表示モード</h2>
+        <p className="mt-1 text-[12px] leading-6 text-ink-500">
+          練習の出題カードの手牌だけを 3D で表示します。回答ボタン・解説・結果は 2D のままです。切り替えは即時反映・保存されます。
+        </p>
+        <div
+          role="group"
+          aria-label="手牌の表示モード"
+          className="mt-3 grid gap-2 sm:grid-cols-3"
+        >
+          {DISPLAY_MODE_CARDS.map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              data-testid="display-mode-card"
+              data-mode={mode.id}
+              onClick={() => updateSettings({ displayMode: mode.id })}
+              aria-pressed={settings.displayMode === mode.id}
+              className={[
+                'rounded-xl border p-2.5 text-left transition-colors',
+                settings.displayMode === mode.id
+                  ? 'border-vermilion bg-vermilion/10'
+                  : 'border-ivory-200 bg-ivory-100/40 hover:border-gold/50',
+              ].join(' ')}
+            >
+              <DisplayModePreview mode={mode.id} />
+              <span className="mt-2 flex items-center justify-between gap-2">
+                <span className="text-[13px] font-semibold text-ink-900">
+                  {mode.title}
+                </span>
+                {settings.displayMode === mode.id ? (
+                  <Icon name="check" className="h-4 w-4 text-vermilion" />
+                ) : null}
+              </span>
+              <span className="mt-0.5 block text-[10px] leading-5 text-ink-500">
+                {mode.body}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-[10px] leading-5 text-ink-500">
+          WebGL が使えない環境、または 3D の読み込みに失敗した場合は、自動で CSS 3D に切り替わります。
+        </p>
       </section>
 
       <section className="card p-5">

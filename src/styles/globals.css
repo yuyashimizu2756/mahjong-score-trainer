@@ -317,6 +317,255 @@ textarea {
   }
 }
 
+/* 練習の手牌ステージ（2D / CSS 3D / Three.js の共通の外枠）。
+   傾きは維持し、ホバーとトランジションだけ reduced-motion で止める。 */
+.hand-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hand-stage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px 2px;
+}
+
+.hand-3d-stage {
+  perspective: 1200px;
+  perspective-origin: 50% 78%;
+  padding: 20px 4px 34px;
+}
+
+.hand-3d-plane {
+  transform: rotateX(14deg);
+  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+}
+
+/* 折り返した 2 段目以降でも「和了」ラベルが上の段に重ならないようにする。 */
+.hand-3d-plane > div {
+  row-gap: 20px;
+}
+
+/* 牌を浮かせて厚みを出す。rotate は個別プロパティなので transform と共存する。 */
+.hand-3d-plane .tile-shell {
+  transform: translateZ(6px);
+  transition: transform 160ms ease-out;
+}
+
+.hand-3d-plane .tile-shell[data-highlight='true'] {
+  transform: translateZ(14px);
+}
+
+/* 下面の接地影。 */
+.hand-3d-plane .tile-shell::after {
+  content: '';
+  position: absolute;
+  right: 4%;
+  bottom: -9px;
+  left: 4%;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(20, 14, 6, 0.42),
+    rgba(20, 14, 6, 0)
+  );
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hand-3d-plane,
+  .hand-3d-plane .tile-shell,
+  .hand-3d-plane .tile {
+    transition: none !important;
+  }
+  .hand-3d-plane .tile-shell:hover,
+  .hand-3d-plane .tile-shell[data-highlight='true']:hover {
+    transform: translateZ(6px);
+  }
+  .hand-3d-plane .tile-shell:hover .tile,
+  .tile-shell:hover .tile {
+    transform: none !important;
+  }
+}
+
+/* Three.js の牌卓。canvas は aria-hidden、操作は DOM のボタンでも提供する。 */
+.three-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.three-hand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.three-hand-host {
+  position: relative;
+  height: clamp(170px, 17vw, 210px);
+  overflow: hidden;
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(160deg, #16483a, #0b241d);
+  box-shadow: inset 0 1px 0 rgba(248, 242, 228, 0.08);
+}
+
+.three-hand-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.three-hand-hint {
+  margin: 0;
+  color: var(--color-ink-500);
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.three-hand-reset {
+  border: 1px solid var(--color-ivory-200);
+  border-radius: 8px;
+  background: var(--color-ivory-50);
+  padding: 3px 8px;
+  color: var(--color-ink-700);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.three-hand-reset:hover {
+  border-color: rgba(201, 162, 39, 0.6);
+  background: var(--color-ivory-100);
+}
+
+.hand-fallback {
+  margin: 0;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: 8px;
+  background: rgba(201, 162, 39, 0.1);
+  padding: 5px 8px;
+  color: var(--color-ink-700);
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.three-win-note {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-ink-700);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.three-win-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--color-gold);
+  box-shadow: 0 0 6px rgba(201, 162, 39, 0.7);
+}
+
+/* 設定画面の表示モード プレビュー。 */
+.mode-preview {
+  display: flex;
+  height: 76px;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f6efdf, #eadfc6);
+  padding-bottom: 8px;
+}
+
+.mode-preview--css3d {
+  perspective: 200px;
+  perspective-origin: 50% 92%;
+}
+
+.mode-preview-plane {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  transform: rotateX(26deg);
+  transform-style: preserve-3d;
+}
+
+.mode-preview--css3d .tile-shell {
+  transform: translateZ(10px);
+}
+
+.mode-preview--css3d .tile-shell::after {
+  content: '';
+  position: absolute;
+  right: 4%;
+  bottom: -6px;
+  left: 4%;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(20, 14, 6, 0.4),
+    rgba(20, 14, 6, 0)
+  );
+  pointer-events: none;
+}
+
+.mode-preview--three {
+  background:
+    radial-gradient(
+      120% 100% at 50% 0%,
+      rgba(201, 162, 39, 0.2),
+      transparent 62%
+    ),
+    linear-gradient(160deg, #16483a, #0b241d);
+  perspective: 360px;
+  perspective-origin: 50% 75%;
+}
+
+.mode-preview-3d {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  transform: rotateX(12deg);
+  transform-style: preserve-3d;
+}
+
+.mode-preview-3d .tile-shell {
+  transform: translateZ(8px);
+}
+
+.mode-preview-3d .tile-shell::after {
+  content: '';
+  position: absolute;
+  right: 4%;
+  bottom: -6px;
+  left: 4%;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(0, 0, 0, 0.5),
+    rgba(0, 0, 0, 0)
+  );
+  pointer-events: none;
+}
+
+
 .card {
   border: 1px solid var(--color-ivory-200);
   border-radius: var(--radius-card);
