@@ -79,6 +79,8 @@ describe('UI シェル', () => {
       JSON.parse(window.localStorage.getItem('mst:v1:settings') ?? '{}')
         .answerMode,
     ).toBe('step');
+    expect(screen.getAllByText(/v0\.1\.0/)).toHaveLength(1);
+    expect(screen.getByText('schema 1')).toBeInTheDocument();
   });
 });
 

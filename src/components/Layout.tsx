@@ -150,9 +150,6 @@ export function Layout({
                   復習 {reviewCount}
                 </button>
               ) : null}
-              <span className="rounded-full border border-line px-2 py-0.5 text-[10px] text-ivory-50/55">
-                v0.1.0
-              </span>
             </div>
           </div>
           <nav

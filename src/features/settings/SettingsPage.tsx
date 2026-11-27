@@ -65,7 +65,7 @@ export function SettingsPage() {
         eyebrow="Settings"
         title="設定"
         description="回答方式・出題の既定値・表示を変更できます。設定と学習データはこのブラウザの localStorage にのみ保存されます。"
-        actions={<Badge tone="dark">v0.1.0 / schema {SCHEMA_VERSION}</Badge>}
+        actions={<Badge tone="dark">schema {SCHEMA_VERSION}</Badge>}
       />
 
       <section className="card p-5">
@@ -265,7 +265,7 @@ export function SettingsPage() {
       <section className="card p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-[17px] text-ink-900">ルールの前提</h2>
-          <Badge tone="neutral">関東標準 / v0.1.0</Badge>
+          <Badge tone="neutral">関東標準</Badge>
         </div>
         <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
           {RULE_POINTS.map((point) => (
@@ -282,8 +282,7 @@ export function SettingsPage() {
           ))}
         </ul>
         <p className="mt-3 border-t border-ivory-200 pt-3 text-[10px] leading-5 text-ink-500">
-          正式な採点ルールは docs/RULES.md に従います。天和・地和・人和・流し満貫は
-          v0.1.0 では判定・出題しません。効果音は実装していません。
+          正式な採点ルールは docs/RULES.md に従います。天和・地和・人和・流し満貫はこのアプリでは判定・出題しません。効果音は実装していません。
         </p>
       </section>
 
