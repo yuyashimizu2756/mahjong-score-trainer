@@ -1,5 +1,5 @@
 import type { Tile as TileType } from '../engine/types';
-import { HONOR_NAMES, SUIT_NAMES, isRed, tileToLabel } from '../engine/tiles';
+import { HONOR_NAMES, isRed } from '../engine/tiles';
 
 export type TileSize = 'sm' | 'md' | 'lg';
 
@@ -11,18 +11,39 @@ export interface TileProps {
   rotated?: boolean;
   /** 和了牌などのハイライト。 */
   highlight?: boolean;
+  /** スート記号（萬/筒/索）を表示する。色覚配慮の設定に対応。 */
+  showSuitMark?: boolean;
   className?: string;
 }
 
 const SIZE_CLASSES: Record<TileSize, string> = {
-  sm: 'h-8 w-6 text-[0.6rem]',
-  md: 'h-11 w-8 text-xs',
-  lg: 'h-14 w-10 text-sm',
+  sm: 'h-[42px] w-[30px]',
+  md: 'h-[56px] w-[40px]',
+  lg: 'h-[72px] w-[52px]',
+};
+
+const MAIN_SIZE: Record<TileSize, string> = {
+  sm: 'text-[15px]',
+  md: 'text-[19px]',
+  lg: 'text-[25px]',
+};
+
+const MARK_SIZE: Record<TileSize, string> = {
+  sm: 'text-[8px]',
+  md: 'text-[10px]',
+  lg: 'text-[12px]',
 };
 
 const RANK_KANJI = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
 const SUIT_MARK: Record<TileType['suit'], string> = {
+  m: '萬',
+  p: '筒',
+  s: '索',
+  z: '',
+};
+
+const SUIT_NAME: Record<TileType['suit'], string> = {
   m: '萬',
   p: '筒',
   s: '索',
@@ -53,21 +74,20 @@ export function Tile({
   size = 'md',
   rotated = false,
   highlight = false,
+  showSuitMark = true,
   className = '',
 }: TileProps) {
   const sizeClass = SIZE_CLASSES[size];
-  const label = faceDown ? '伏せ牌' : `${SUIT_NAMES[tile.suit]} ${tileToLabel(tile)}`;
   const red = !faceDown && isRed(tile);
 
   if (faceDown) {
     return (
       <span
-        aria-label={label}
+        aria-label="伏せ牌"
         role="img"
         data-tile="back"
         className={[
-          'relative inline-flex shrink-0 items-center justify-center rounded-[4px]',
-          'border border-forest-soft bg-forest shadow-[inset_0_0_0_2px_rgba(243,238,226,0.12)]',
+          'tile-back relative inline-flex shrink-0 items-center justify-center rounded-[6px]',
           sizeClass,
           rotated ? 'rotate-90' : '',
           className,
@@ -75,47 +95,60 @@ export function Tile({
       >
         <span
           aria-hidden="true"
-          className="h-2/5 w-2/5 rounded-[2px] border border-paper/25 bg-forest-soft/70"
+          className="h-2/5 w-2/5 rounded-[2px] border border-gold/40 bg-felt-800/60"
         />
       </span>
     );
   }
 
   const { main, mark } = faceContent(tile);
+  const label =
+    tile.suit === 'z'
+      ? `${HONOR_NAMES[tile.rank] ?? '?'}`
+      : `${red ? '赤' : ''}${RANK_KANJI[tile.rank - 1] ?? tile.rank}${
+          SUIT_NAME[tile.suit]
+        }`;
 
   return (
     <span
       role="img"
-      aria-label={label}
+      aria-label={highlight ? `${label}（和了牌）` : label}
       data-tile={`${tile.suit}${tile.rank}`}
       data-red={red ? 'true' : undefined}
+      data-highlight={highlight ? 'true' : undefined}
       className={[
-        'relative inline-flex shrink-0 select-none flex-col items-center justify-center',
-        'rounded-[4px] border bg-paper-soft leading-none shadow-sm',
-        highlight
-          ? 'border-vermillion ring-2 ring-vermillion/50'
-          : 'border-kinari',
+        'tile-face relative inline-flex shrink-0 select-none flex-col items-center justify-center rounded-[6px] leading-none',
+        highlight ? 'border-t-4 border-t-gold ring-2 ring-gold/60' : '',
         sizeClass,
         rotated ? 'rotate-90' : '',
         className,
       ].join(' ')}
     >
+      {highlight ? (
+        <span
+          aria-hidden="true"
+          className="absolute -top-[15px] left-1/2 -translate-x-1/2 rounded-sm bg-gold px-1 py-[1px] text-[8px] font-bold leading-none text-ink-900"
+        >
+          和了
+        </span>
+      ) : null}
       <span
         aria-hidden="true"
         className={[
           'font-semibold tracking-tight',
-          red ? 'text-vermillion' : SUIT_CLASS[tile.suit],
-          tile.suit === 'z' ? 'text-[1.15em]' : 'text-[1.25em]',
+          red ? 'text-tile-red' : SUIT_CLASS[tile.suit],
+          MAIN_SIZE[size],
         ].join(' ')}
       >
         {main}
       </span>
-      {mark ? (
+      {mark && showSuitMark ? (
         <span
           aria-hidden="true"
           className={[
-            'mt-[0.1em] text-[0.55em] opacity-80',
-            red ? 'text-vermillion' : SUIT_CLASS[tile.suit],
+            'mt-[2px] leading-none opacity-85',
+            MARK_SIZE[size],
+            red ? 'text-tile-red' : SUIT_CLASS[tile.suit],
           ].join(' ')}
         >
           {mark}
@@ -124,7 +157,7 @@ export function Tile({
       {red ? (
         <span
           aria-hidden="true"
-          className="absolute right-[2px] top-[1px] h-1 w-1 rounded-full bg-vermillion"
+          className="absolute right-[3px] top-[2px] h-1.5 w-1.5 rounded-full bg-tile-red"
         />
       ) : null}
     </span>

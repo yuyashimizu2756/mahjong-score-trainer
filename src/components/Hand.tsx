@@ -9,6 +9,7 @@ export interface HandProps {
   melds?: readonly Meld[];
   winTile?: TileType;
   size?: TileSize;
+  showSuitMark?: boolean;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export function Hand({
   melds = [],
   winTile,
   size = 'md',
+  showSuitMark = true,
   className = '',
 }: HandProps) {
   const highlight = winIndex(concealed, winTile);
@@ -46,7 +48,11 @@ export function Hand({
     <div
       role="group"
       aria-label={label}
-      className={['flex flex-wrap items-end gap-y-3', className].join(' ')}
+      className={[
+        'flex flex-wrap items-end gap-y-3',
+        highlight >= 0 ? 'pt-4' : '',
+        className,
+      ].join(' ')}
     >
       <div className="flex flex-wrap items-end gap-[2px]">
         {concealed.map((tile, index) => (
@@ -55,6 +61,7 @@ export function Hand({
             tile={tile}
             size={size}
             highlight={index === highlight}
+            showSuitMark={showSuitMark}
           />
         ))}
       </div>
@@ -63,7 +70,7 @@ export function Hand({
         <div
           key={`${meld.type}-${meldIndex}`}
           aria-label={`${MELD_LABEL[meld.type]} ${formatTiles(meld.tiles)}`}
-          className="ml-2 flex items-end gap-[2px] rounded-sm border-l-2 border-forest/20 pl-2"
+          className="ml-2 flex items-end gap-[2px] rounded-sm border-l-2 border-ink-500/30 pl-2"
         >
           {meld.tiles.map((tile, tileIndex) => (
             <Tile
@@ -71,6 +78,7 @@ export function Hand({
               tile={tile}
               size={size}
               rotated={meld.open && tileIndex === 0}
+              showSuitMark={showSuitMark}
             />
           ))}
         </div>
