@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'YuGothic',
+    'Meiryo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-paper: #f3eee2;
+  --color-paper-soft: #fbf8ef;
+  --color-paper-deep: #e8e0cd;
+  --color-forest: #103c31;
+  --color-forest-soft: #1b5747;
+  --color-forest-mist: #dfe9e2;
+  --color-vermillion: #c3402b;
+  --color-vermillion-soft: #f3ded8;
+  --color-sumi: #1c2420;
+  --color-sumi-soft: #55605a;
+  --color-kinari: #ded3ba;
+  --color-gold: #a9863f;
+  --color-tile-man: #a8322b;
+  --color-tile-pin: #245f8f;
+  --color-tile-sou: #1f6b45;
+  --color-tile-honor: #20241f;
+}
+
+:root {
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(16, 60, 49, 0.08), transparent 45%),
+    radial-gradient(circle at 88% 100%, rgba(195, 64, 43, 0.06), transparent 40%),
+    var(--color-paper);
+  color: var(--color-sumi);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-vermillion);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
