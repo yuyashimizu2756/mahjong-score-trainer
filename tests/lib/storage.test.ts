@@ -53,9 +53,50 @@ describe('storage', () => {
       tileSize: 'lg' as const,
       colorBlindSuits: false,
       reduceMotion: true,
+      displayMode: 'three' as const,
     };
     expect(saveSettings(next)).toBe(true);
     expect(loadSettings()).toEqual(next);
+  });
+
+  it('displayMode の既定は css3d', () => {
+    expect(DEFAULT_SETTINGS.displayMode).toBe('css3d');
+    expect(loadSettings()).toEqual(
+      expect.objectContaining({ displayMode: 'css3d' }),
+    );
+  });
+
+  it('displayMode を持たない古い保存データは css3d として読む（後方互換）', () => {
+    const legacy = {
+      answerMode: 'step',
+      defaultDifficulty: 'standard',
+      tileSize: 'sm',
+      colorBlindSuits: false,
+      reduceMotion: true,
+    };
+    window.localStorage.setItem(
+      STORAGE_KEYS.settings,
+      JSON.stringify(legacy),
+    );
+    expect(loadSettings()).toEqual({ ...legacy, displayMode: 'css3d' });
+    // 有効なデータなので消さない。
+    expect(window.localStorage.getItem(STORAGE_KEYS.settings)).not.toBeNull();
+  });
+
+  it('displayMode が不正なら設定ごと初期化する', () => {
+    window.localStorage.setItem(
+      STORAGE_KEYS.settings,
+      JSON.stringify({ ...DEFAULT_SETTINGS, displayMode: 'webgl' }),
+    );
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    expect(window.localStorage.getItem(STORAGE_KEYS.settings)).toBeNull();
+  });
+
+  it('3 モードをすべて保存・復元できる', () => {
+    for (const displayMode of ['2d', 'css3d', 'three'] as const) {
+      saveSettings({ ...DEFAULT_SETTINGS, displayMode });
+      expect(loadSettings().displayMode).toBe(displayMode);
+    }
   });
 
   it('成績を保存して復元する', () => {
