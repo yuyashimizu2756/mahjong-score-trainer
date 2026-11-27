@@ -190,7 +190,7 @@ export function Layout({
 
           <footer className="no-print border-t border-line px-4 py-5 text-[10px] leading-5 text-ivory-50/40">
             <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <p>麻雀点数トレーナー v0.1.0 — リーチ麻雀の関東標準ルール</p>
+              <p>麻雀点数トレーナー v0.1.1 — リーチ麻雀の関東標準ルール</p>
               <p>
                 採点は docs/RULES.md、保存はこのブラウザの localStorage のみ。
               </p>
