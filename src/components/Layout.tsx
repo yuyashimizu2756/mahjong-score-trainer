@@ -28,7 +28,7 @@ function Brand({ onHome, compact = false }: { onHome: () => void; compact?: bool
     >
       <span
         aria-hidden="true"
-        className="tile-face flex h-10 w-8 shrink-0 items-center justify-center rounded-[6px] text-[17px] font-bold text-tile-man"
+        className="brand-tile text-tile-man"
       >
         東
       </span>
