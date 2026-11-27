@@ -336,7 +336,16 @@ async function main() {
   const browser = await puppeteer.launch({
     executablePath: chrome,
     headless: 'new',
-    args: ['--hide-scrollbars', '--disable-gpu', '--no-first-run', '--no-default-browser-check'],
+    timeout: 30_000,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--hide-scrollbars',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-default-browser-check',
+    ],
   });
 
   const results = [];
