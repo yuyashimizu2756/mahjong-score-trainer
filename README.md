@@ -3,6 +3,12 @@
 リーチ麻雀の点数計算を、理解して、反復して、身につけるための学習・暗記・練習アプリです。
 ブラウザだけで動き、ビルドすると 1 枚の HTML になります（オフライン可）。
 
+## 公開
+
+- **ブラウザで遊ぶ**: https://yuyashimizu2756.github.io/mahjong-score-trainer/
+- **オフライン用の単一 HTML**: [Releases](https://github.com/yuyashimizu2756/mahjong-score-trainer/releases) の `mahjong-score-trainer-v0.1.0.html` をダウンロードして開く
+- 成績・復習・学習進捗は、そのブラウザの localStorage にだけ保存されます
+
 ## できること（v0.1.0）
 
 - **ホーム**: 今日の成績、通算成績、学習進捗、苦手役 Top3、主要導線と「覚え方」への導線
