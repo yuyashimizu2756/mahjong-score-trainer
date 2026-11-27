@@ -144,8 +144,13 @@ function countKey(tile: Tile): string {
 }
 
 function canAdd(tiles: readonly Tile[], counts: Map<string, number>): boolean {
+  const needed = new Map<string, number>();
   for (const tile of tiles) {
-    if ((counts.get(countKey(tile)) ?? 0) + 1 > 4) return false;
+    const key = countKey(tile);
+    needed.set(key, (needed.get(key) ?? 0) + 1);
+  }
+  for (const [key, count] of needed) {
+    if ((counts.get(key) ?? 0) + count > 4) return false;
   }
   return true;
 }

@@ -309,6 +309,40 @@ describe('通常役', () => {
     expect(map.get('sanankou')).toBe(2);
     expect(map.get('toitoi')).toBe(2);
   });
+  it('三色同刻（門前 2 翻）', () => {
+    const map = yakuMap(input('111m111p111s234m99s', '1s'));
+    expect(map.get('sanshokuDoukou')).toBe(2);
+  });
+
+  it('三色同刻（副露しても 2 翻）', () => {
+    const map = yakuMap(
+      input('111p111s234m99s', '1s', { melds: [meld('pon', '111m')] }),
+    );
+    expect(map.get('sanshokuDoukou')).toBe(2);
+  });
+
+  it('三色同刻は槓子でも成立する', () => {
+    const map = yakuMap(
+      input('111s234m99s', '1s', {
+        melds: [meld('kan', '1111m'), meld('pon', '111p')],
+      }),
+    );
+    expect(map.get('sanshokuDoukou')).toBe(2);
+  });
+
+  it('三色同刻は 2 種だけでは成立しない', () => {
+    const map = yakuMap(
+      input('111m111p234m99s', '9s', { melds: [meld('pon', '555z')] }),
+    );
+    expect(map.has('sanshokuDoukou')).toBe(false);
+    expect(map.get('yakuhaiHaku')).toBe(1);
+  });
+
+  it('三色同順と三色同刻は別の役', () => {
+    const map = yakuMap(input('123m123p123s456m99p', '3s'));
+    expect(map.get('sanshokuDoujun')).toBe(2);
+    expect(map.has('sanshokuDoukou')).toBe(false);
+  });
 });
 
 describe('役満', () => {

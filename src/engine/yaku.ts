@@ -244,6 +244,23 @@ export function evaluateStandardYaku(
     }
   }
 
+  // 三色同刻
+  const tripletRanks = new Map<number, Set<string>>();
+  for (const set of hand.sets) {
+    if (!isTripletLike(set)) continue;
+    const tile = set.tiles[0];
+    if (tile.suit === 'z') continue;
+    const suits = tripletRanks.get(tile.rank) ?? new Set<string>();
+    suits.add(tile.suit);
+    tripletRanks.set(tile.rank, suits);
+  }
+  for (const suits of tripletRanks.values()) {
+    if (suits.has('m') && suits.has('p') && suits.has('s')) {
+      add('sanshokuDoukou', '三色同刻', 2);
+      break;
+    }
+  }
+
   // 一気通貫
   for (const suit of ['m', 'p', 's'] as const) {
     const starts = new Set<number>();
