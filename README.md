@@ -13,21 +13,82 @@
 - **役一覧**: 門前/副露の翻数、成立条件、例つき
 - **成績**: 正答率・連続正解・苦手な役（localStorage に保存）
 
+> v0.1.0 では点数計算エンジンと UI の土台（6 タブのシェル、牌・手牌コンポーネント）を実装しています。
+> 各画面の本実装は Issue #2 以降で追加します。
+
+## 必要な環境
+
+- Node.js 24
+- npm 11
+
 ## 開発
 
 ```bash
 npm ci
 npm run dev        # 開発サーバー
 npm run typecheck  # 型チェック
-npm run test       # テスト
+npm run test       # テスト（Vitest）
+npm run test:watch # テスト（監視）
 npm run build      # dist/index.html（単一ファイル）
 ```
 
-## ルール
+PowerShell の実行ポリシーで `npm` が止まる場合は `npm.cmd` を使ってください。
 
-採点は `docs/RULES.md` の関東標準ルールに従います。
-設計とエンジン API は `docs/DESIGN.md` を参照してください。
+## 単一 HTML の配布
+
+`npm run build` は `vite-plugin-singlefile` で JS・CSS をすべて `dist/index.html` にインライン化します。
+
+- 出力は `dist/index.html` の 1 ファイルのみ
+- `base: './'` なので `file://` で直接開ける
+- 外部フォント・画像・CDN・API へのリクエストはありません（オフラインで完結）
+- フォントは OS の日本語システムフォントを使用します
+
+## 構成
+
+```text
+src/
+  engine/          # 純粋 TypeScript。DOM / React / localStorage に依存しない
+    types.ts       # 公開 API の型
+    tiles.ts       # 牌の表現・文字列パース・ドラ変換
+    decompose.ts   # 標準形 / 七対子 / 国士の分解、待ち形
+    yaku.ts        # 役判定・喰い下がり・役満の複合
+    fu.ts          # 符計算（平和ツモ、喰い平和、連風牌など）
+    score.ts       # computeScore（上限・支払い・本場・供託）
+    problem.ts     # generateProblem（seed 付き決定論的乱数）
+    index.ts       # 公開エクスポート
+  components/      # Tile, Hand（CSS だけで牌を描画）
+  styles/          # Tailwind 4 とデザイントークン
+  App.tsx          # 6 タブの UI シェル
+  main.tsx
+tests/
+  engine/          # 検算ベクタ・役・符・点数・不正入力・出題生成
+  ui/              # タブ切替・牌・手牌
+```
+
+## ルールの前提
+
+採点は `docs/RULES.md` の関東標準ルールに従います。設計とエンジン API は `docs/DESIGN.md` を参照してください。
+主な前提は次のとおりです。
+
+- 和了は「4 面子 + 1 雀頭」「七対子」「国士無双」のいずれか
+- 役が 1 つもない手（ドラのみ）は和了できない
+- 喰い下がり: 三色・一気・混全は 2→1、純全は 3→2、混一は 3→2、清一は 6→5
+- 平和ツモは 20 符、平和ロンは 30 符、喰い平和形のロンは 20→30 符
+- ロンで完成した刻子は明刻として扱う（符・三暗刻など）
+- 連風牌の雀頭は +2 符（+4 にはしない）
+- 役満は複合し、ダブル役満は 2 倍。役満時は通常役・ドラの翻を加算しない
+- 13 翻以上は数え役満。5 翻または基本点 2000 以上は満貫
+- 本場はロン +300 / ツモ各 +100、供託リード棒は 1000 点 × 本数
+
+`computeScore` は不正な入力でも例外を投げず `{ ok: false, error }` を返します。
+同じ入力と seed に対しては常に同じ結果になります（乱数は mulberry32、時刻依存なし）。
+
+## テスト
+
+- `docs/TEST-VECTORS.md` の A〜X を含む 188 テスト
+- 3 難易度 × 1000 問（合計 3000 問）の出題生成テスト
+- 役・符・点数上限・支払い・本場・供託・赤ドラ・裏ドラ・不正入力を網羅
 
 ## 状態
 
-v0.1.0 を開発中です。
+v0.1.0 を開発中です。点数計算エンジンと UI シェルは実装済み、画面の本実装はこれからです。
