@@ -1,10 +1,10 @@
 /**
  * 3D 牌卓のカメラ軌道。Three.js に依存しない純粋関数。
- * 基準位置 (0, 7.5, 9.5)・注視点 (0, 0, 0) を中心に、ドラッグで ±25° / ±10° だけ動かす。
+ * 基準位置 (0, 6.5, 9)・注視点 (0, 0, 0) を中心に、ドラッグで ±25° / ±10° だけ動かす。
  */
 
-export const CAMERA_RADIUS = Math.hypot(7.5, 9.5);
-export const BASE_ELEVATION = Math.atan2(7.5, 9.5);
+export const CAMERA_RADIUS = Math.hypot(6.5, 9);
+export const BASE_ELEVATION = Math.atan2(6.5, 9);
 export const BASE_AZIMUTH = 0;
 export const MAX_AZIMUTH = (25 * Math.PI) / 180;
 export const MAX_ELEVATION = (10 * Math.PI) / 180;

@@ -4,12 +4,14 @@ import {
   lazy,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import type { Meld, Tile } from '../../engine/types';
 import type { Settings } from '../../lib/storage';
 import { Hand } from '../../components/Hand';
+import { shouldFallbackToCss3d } from './scene/framing';
 import { describeHand, tileJaLabel } from './scene/handText';
 import { isWebGLAvailable } from './scene/webgl';
 
@@ -67,16 +69,55 @@ export function HandStage({
   settings,
 }: HandStageProps) {
   const requested = settings.displayMode;
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [stageWidth, setStageWidth] = useState(() =>
+    typeof window === 'undefined' ? 0 : Math.max(0, window.innerWidth - 48),
+  );
+  const [stageHeight, setStageHeight] = useState(200);
   const webgl = useMemo(() => isWebGLAvailable(), []);
   const [failed, setFailed] = useState(false);
+
+  // 3D はステージの幅で段数・読みやすさが変わる。幅を測ってフォールバックを判定する。
+  useEffect(() => {
+    const element = stageRef.current;
+    if (!element) return;
+    const measure = () => {
+      const width =
+        element.clientWidth ||
+        (typeof window !== 'undefined' ? window.innerWidth - 48 : 0);
+      const height = element.clientHeight || 200;
+      setStageWidth((previous) => (previous === width ? previous : width));
+      setStageHeight((previous) => (previous === height ? previous : height));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', measure);
+      return () => window.removeEventListener('resize', measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   // 表示モードを切り替えたら、もう一度 Three.js を試せるようにする。
   useEffect(() => {
     setFailed(false);
   }, [requested]);
 
-  const fallbackReason: 'unsupported' | 'error' | null =
-    requested !== 'three' ? null : !webgl ? 'unsupported' : failed ? 'error' : null;
+  const smallStage =
+    requested === 'three' &&
+    shouldFallbackToCss3d(stageWidth, stageHeight || 200);
+
+  const fallbackReason: 'unsupported' | 'error' | 'small' | null =
+    requested !== 'three'
+      ? null
+      : smallStage
+        ? 'small'
+        : !webgl
+          ? 'unsupported'
+          : failed
+            ? 'error'
+            : null;
   const effective: Settings['displayMode'] =
     requested === 'three' && fallbackReason ? 'css3d' : requested;
 
@@ -102,6 +143,7 @@ export function HandStage({
 
   return (
     <div
+      ref={stageRef}
       className="hand-stage"
       data-testid="hand-stage"
       data-hand-mode={effective}
@@ -156,7 +198,9 @@ export function HandStage({
         >
           {fallbackReason === 'unsupported'
             ? 'この環境では WebGL が使えないため、CSS 3D で表示しています。'
-            : '3D の表示に失敗したため、CSS 3D に切り替えました。'}
+            : fallbackReason === 'small'
+              ? 'リアル 3D はデスクトップ推奨です。画面が狭いため CSS 3D で表示しています。'
+              : '3D の表示に失敗したため、CSS 3D に切り替えました。'}
         </p>
       ) : null}
     </div>

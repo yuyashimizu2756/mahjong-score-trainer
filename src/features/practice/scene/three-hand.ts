@@ -29,7 +29,6 @@ import {
   TILE_DEPTH,
   TILE_HEIGHT,
   TILE_WIDTH,
-  sceneWidth,
   type HandSceneItem,
   type HandSceneLayout,
 } from './layout';
@@ -39,6 +38,7 @@ import {
   orbitPosition,
   type Orbit,
 } from './camera';
+import { fitFrustum } from './fit';
 import { createFaceCanvas, textureKey } from './textures';
 
 /**
@@ -65,6 +65,15 @@ const EMPTY_LAYOUT: HandSceneLayout = {
   width: 14 * (TILE_WIDTH + 0.06),
   height: TILE_HEIGHT,
   dora: null,
+  rows: 1,
+  bounds: {
+    minX: -7.5,
+    maxX: 7.5,
+    minY: 0,
+    maxY: TILE_HEIGHT,
+    minZ: -TILE_DEPTH,
+    maxZ: TILE_DEPTH,
+  },
 };
 
 export function createHandScene(host: HTMLElement): HandScene {
@@ -79,7 +88,7 @@ export function createHandScene(host: HTMLElement): HandScene {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 1.1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
 
@@ -257,12 +266,11 @@ export function createHandScene(host: HTMLElement): HandScene {
     const width = Math.max(1, host.clientWidth);
     const height = Math.max(1, host.clientHeight);
     const aspect = width / height;
-    const viewWidth = Math.max(sceneWidth(layout), 3);
-    const viewHeight = Math.max(viewWidth / aspect, 2.6);
-    camera.left = -viewWidth / 2;
-    camera.right = viewWidth / 2;
-    camera.top = viewHeight / 2;
-    camera.bottom = -viewHeight / 2;
+    const fit = fitFrustum(layout.bounds, aspect);
+    camera.left = fit.left;
+    camera.right = fit.right;
+    camera.top = fit.top;
+    camera.bottom = fit.bottom;
     camera.updateProjectionMatrix();
   };
 

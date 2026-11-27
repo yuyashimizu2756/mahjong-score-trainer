@@ -410,7 +410,7 @@ textarea {
 
 .three-hand-host {
   position: relative;
-  height: clamp(170px, 17vw, 210px);
+  height: 200px;
   overflow: hidden;
   border: 1px solid rgba(201, 162, 39, 0.28);
   border-radius: 10px;
@@ -563,6 +563,21 @@ textarea {
     rgba(0, 0, 0, 0)
   );
   pointer-events: none;
+}
+
+/* モバイルは牌の周囲の余白を詰めて、回答ボタンを初期表示に近づける。 */
+@media (max-width: 640px) {
+  .hand-3d-stage {
+    padding: 12px 2px 22px;
+  }
+
+  .hand-3d-plane > div {
+    row-gap: 14px;
+  }
+
+  .three-hand-host {
+    height: 170px;
+  }
 }
 
 
