@@ -29,12 +29,21 @@ import {
   type Stats,
 } from './storage';
 import { todayKey } from './format';
+import {
+  applyDrillAnswer,
+  defaultDrillState,
+  loadDrill,
+  saveDrill,
+  type DrillKind,
+  type DrillState,
+} from './srs';
 
 export interface AppData {
   settings: Settings;
   stats: Stats;
   review: ReviewItem[];
   learn: LearnProgress;
+  drill: DrillState;
   updateSettings: (patch: Partial<Settings>) => void;
   recordAnswer: (problem: Problem, correct: boolean) => void;
   addReview: (problem: Problem) => void;
@@ -44,6 +53,7 @@ export interface AppData {
     quizCorrect: number,
     quizTotal: number,
   ) => void;
+  recordDrill: (id: string, kind: DrillKind, correct: boolean) => void;
   resetStats: () => void;
   clearAll: () => void;
 }
@@ -55,6 +65,7 @@ function bootstrap(): {
   stats: Stats;
   review: ReviewItem[];
   learn: LearnProgress;
+  drill: DrillState;
 } {
   initStorage();
   return {
@@ -62,6 +73,7 @@ function bootstrap(): {
     stats: loadStats(),
     review: loadReview(),
     learn: loadLearn(),
+    drill: loadDrill(),
   };
 }
 
@@ -79,6 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [stats, setStats] = useState<Stats>(initial.stats);
   const [review, setReview] = useState<ReviewItem[]>(initial.review);
   const [learn, setLearn] = useState<LearnProgress>(initial.learn);
+  const [drill, setDrill] = useState<DrillState>(initial.drill);
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
     setSettings((previous) => {
@@ -187,10 +200,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const recordDrill = useCallback(
+    (id: string, kind: DrillKind, correct: boolean) => {
+      setDrill((previous) => {
+        const next = applyDrillAnswer(previous, {
+          id,
+          kind,
+          correct,
+          day: todayKey(),
+        });
+        saveDrill(next);
+        return next;
+      });
+    },
+    [],
+  );
+
   const resetStats = useCallback(() => {
     resetStatsStorage();
     setStats({ ...DEFAULT_STATS, byYaku: {}, byDay: {} });
     setReview([]);
+    setDrill(defaultDrillState());
   }, []);
 
   const clearAll = useCallback(() => {
@@ -199,6 +229,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setStats({ ...DEFAULT_STATS, byYaku: {}, byDay: {} });
     setReview([]);
     setLearn({ ...DEFAULT_LEARN });
+    setDrill(defaultDrillState());
     initStorage();
   }, []);
 
@@ -208,11 +239,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       stats,
       review,
       learn,
+      drill,
       updateSettings,
       recordAnswer,
       addReview,
       removeReview,
       completeLesson,
+      recordDrill,
       resetStats,
       clearAll,
     }),
@@ -221,11 +254,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       stats,
       review,
       learn,
+      drill,
       updateSettings,
       recordAnswer,
       addReview,
       removeReview,
       completeLesson,
+      recordDrill,
       resetStats,
       clearAll,
     ],

@@ -49,6 +49,7 @@ export function SettingsPage() {
     stats,
     review,
     learn,
+    drill,
     resetStats,
     clearAll,
   } = useAppData();
@@ -238,6 +239,13 @@ export function SettingsPage() {
             </div>
           ))}
         </dl>
+        <p className="mt-2 text-[10px] leading-5 text-ink-500">
+          暗記ドリル: {drill.stats.total} 問 / 正答率{' '}
+          {drill.stats.total > 0
+            ? `${Math.round((drill.stats.correct / drill.stats.total) * 100)}%`
+            : '—'}
+          （{Object.keys(drill.cards).length} 枚のカード）
+        </p>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <Button
@@ -258,7 +266,7 @@ export function SettingsPage() {
           </Button>
         </div>
         <p className="mt-2 text-[10px] leading-5 text-ink-500">
-          「成績と復習をリセット」は設定と学習の完了状態を残します。「全データを削除」は設定・成績・復習・学習をすべて初期化します。
+          「成績と復習をリセット」は設定と学習の完了状態を残します。「全データを削除」は設定・成績・復習・学習・暗記ドリルをすべて初期化します。
         </p>
       </section>
 
@@ -289,7 +297,7 @@ export function SettingsPage() {
       <ConfirmDialog
         open={confirmReset}
         title="成績と復習をリセットしますか？"
-        description="通算成績・日別成績・役別成績・復習キューを削除します。設定と学習の完了状態は残ります。この操作は取り消せません。"
+        description="通算成績・日別成績・役別成績・復習キュー・暗記ドリルの習熟度と成績を削除します。設定と学習の完了状態は残ります。この操作は取り消せません。"
         confirmLabel="リセットする"
         onCancel={() => setConfirmReset(false)}
         onConfirm={() => {
@@ -300,7 +308,7 @@ export function SettingsPage() {
       <ConfirmDialog
         open={confirmClear}
         title="すべてのデータを削除しますか？"
-        description="設定・成績・復習キュー・学習の完了状態をすべて削除し、初期状態に戻します。この操作は取り消せません。"
+        description="設定・成績・復習キュー・学習の完了状態・暗記ドリルの習熟度をすべて削除し、初期状態に戻します。この操作は取り消せません。"
         confirmLabel="すべて削除する"
         onCancel={() => setConfirmClear(false)}
         onConfirm={() => {

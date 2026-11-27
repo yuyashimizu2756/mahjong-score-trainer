@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 export type IconName =
   | 'home'
   | 'learn'
+  | 'memorize'
   | 'practice'
   | 'chart'
   | 'yaku'
@@ -44,6 +45,13 @@ const PATHS: Record<IconName, ReactNode> = {
       <circle cx="12" cy="12" r="8.5" />
       <circle cx="12" cy="12" r="4.5" />
       <circle cx="12" cy="12" r="1" />
+    </>
+  ),
+  memorize: (
+    <>
+      <rect x="4" y="3.5" width="12" height="17" rx="2" />
+      <path d="M7.5 8h5M7.5 12h5M7.5 16h3" />
+      <path d="M19 7.5v9" />
     </>
   ),
   chart: (

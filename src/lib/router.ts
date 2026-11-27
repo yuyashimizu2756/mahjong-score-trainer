@@ -1,6 +1,7 @@
 export type RouteName =
   | 'home'
   | 'learn'
+  | 'memorize'
   | 'practice'
   | 'chart'
   | 'yaku'
@@ -9,6 +10,7 @@ export type RouteName =
 export const ROUTE_NAMES: readonly RouteName[] = [
   'home',
   'learn',
+  'memorize',
   'practice',
   'chart',
   'yaku',

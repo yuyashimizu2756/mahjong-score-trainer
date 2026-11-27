@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   stats: `${STORAGE_PREFIX}stats`,
   review: `${STORAGE_PREFIX}review`,
   learn: `${STORAGE_PREFIX}learn`,
+  drill: `${STORAGE_PREFIX}drill`,
 } as const;
 
 export interface Settings {
@@ -321,6 +322,7 @@ export function saveLearn(learn: LearnProgress): boolean {
 export function resetStatsStorage(): void {
   removeKey(STORAGE_KEYS.stats);
   removeKey(STORAGE_KEYS.review);
+  removeKey(STORAGE_KEYS.drill);
 }
 
 /** 設定を含む全データを消す（スキーマ版は残す）。 */
@@ -329,4 +331,5 @@ export function clearAllStorage(): void {
   removeKey(STORAGE_KEYS.stats);
   removeKey(STORAGE_KEYS.review);
   removeKey(STORAGE_KEYS.learn);
+  removeKey(STORAGE_KEYS.drill);
 }

@@ -9,6 +9,7 @@ import {
   loadReview,
   loadSettings,
   loadStats,
+  resetStatsStorage,
   saveLearn,
   saveReview,
   saveSettings,
@@ -16,6 +17,11 @@ import {
   type ReviewItem,
 } from '../../src/lib/storage';
 import { generateProblem } from '../../src/engine/problem';
+import {
+  defaultDrillState,
+  loadDrill,
+  saveDrill,
+} from '../../src/lib/srs';
 
 function seedStorage(): void {
   window.localStorage.clear();
@@ -88,8 +94,40 @@ describe('storage', () => {
     });
   });
 
-  it('壊れた JSON は初期化して継続する', () => {
-    window.localStorage.setItem(STORAGE_KEYS.settings, '{not json');
+  it('ドリル状態を保存して復元する', () => {
+    const state = defaultDrillState();
+    state.cards['score:abc'] = {
+      id: 'score:abc',
+      kind: 'score',
+      level: 2,
+      dueAt: 1_700_000_000_000,
+      correct: 3,
+      total: 4,
+    };
+    state.stats.total = 4;
+    state.stats.correct = 3;
+    state.stats.bestStreak = 3;
+    state.stats.byDay['2026-11-27'] = { total: 4, correct: 3 };
+    expect(saveDrill(state)).toBe(true);
+    expect(loadDrill()).toEqual(state);
+  });
+
+  it('壊れたドリル JSON は初期化する', () => {
+    window.localStorage.setItem(STORAGE_KEYS.drill, '{broken');
+    expect(() => loadDrill()).not.toThrow();
+    expect(loadDrill()).toEqual(defaultDrillState());
+    expect(window.localStorage.getItem(STORAGE_KEYS.drill)).toBeNull();
+  });
+
+  it('型が違うドリル状態は初期化する', () => {
+    window.localStorage.setItem(
+      STORAGE_KEYS.drill,
+      JSON.stringify({ cards: { a: { level: 99 } }, stats: {} }),
+    );
+    expect(loadDrill()).toEqual(defaultDrillState());
+  });
+
+  it('壊れた JSON は初期化して継続する', () => {    window.localStorage.setItem(STORAGE_KEYS.settings, '{not json');
     expect(() => loadSettings()).not.toThrow();
     expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
     expect(window.localStorage.getItem(STORAGE_KEYS.settings)).toBeNull();
@@ -146,9 +184,28 @@ describe('storage', () => {
     saveLearn({
       lessons: { basics: { completed: true, quizCorrect: 3, quizTotal: 3 } },
     });
+    const drill = defaultDrillState();
+    drill.stats.total = 5;
+    saveDrill(drill);
     clearAllStorage();
     expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
     expect(loadReview()).toEqual([]);
     expect(loadLearn().lessons).toEqual({});
+    expect(loadDrill()).toEqual(defaultDrillState());
+  });
+
+  it('成績リセットでドリル状態も消える', () => {
+    const drill = defaultDrillState();
+    drill.cards['fu:a'] = {
+      id: 'fu:a',
+      kind: 'fu',
+      level: 3,
+      dueAt: 1,
+      correct: 1,
+      total: 1,
+    };
+    saveDrill(drill);
+    resetStatsStorage();
+    expect(loadDrill()).toEqual(defaultDrillState());
   });
 });
