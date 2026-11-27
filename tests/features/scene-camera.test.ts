@@ -11,11 +11,11 @@ import {
 } from '../../src/features/practice/scene/camera';
 
 describe('3D カメラの軌道', () => {
-  it('基準位置は (0, 7.5, 9.5) 付近', () => {
+  it('基準位置は (0, 6.5, 9) 付近', () => {
     const position = orbitPosition(DEFAULT_ORBIT);
     expect(position.x).toBeCloseTo(0, 6);
-    expect(position.y).toBeCloseTo(7.5, 6);
-    expect(position.z).toBeCloseTo(9.5, 6);
+    expect(position.y).toBeCloseTo(6.5, 6);
+    expect(position.z).toBeCloseTo(9, 6);
   });
 
   it('どの角度でも注視点からの距離は一定', () => {

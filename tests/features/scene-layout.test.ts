@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Meld, Tile } from '../../src/engine/types';
+import { BASE_ELEVATION } from '../../src/features/practice/scene/camera';
 import {
   DORA_DEPTH,
   MELD_GAP,
+  ROW_DEPTH,
+  TILE_DEPTH,
   TILE_GAP,
   TILE_HEIGHT,
   TILE_WIDTH,
@@ -11,7 +14,7 @@ import {
   findWinIndex,
   footprintWidth,
   layoutHand,
-  sceneWidth,
+  type HandSceneItem,
 } from '../../src/features/practice/scene/layout';
 
 const fourteen: Tile[] = [
@@ -41,9 +44,26 @@ const chi: Meld = {
   open: true,
 };
 
+function extents(item: HandSceneItem) {
+  const rotated = item.rotation !== 0;
+  const halfX = (footprintWidth(rotated) / 2) * item.scale;
+  const halfY = ((rotated ? TILE_WIDTH : TILE_HEIGHT) / 2) * item.scale;
+  const halfZ = (TILE_DEPTH / 2) * item.scale;
+  return { halfX, halfY, halfZ };
+}
+
+/** スクリーン上下方向（上が正）の位置。 */
+function vertical(item: HandSceneItem, edge: 'top' | 'bottom'): number {
+  const { halfY, halfZ } = extents(item);
+  const y = edge === 'top' ? item.y + halfY : item.y - halfY;
+  const z = edge === 'top' ? item.z - halfZ : item.z + halfZ;
+  return y * Math.cos(BASE_ELEVATION) - z * Math.sin(BASE_ELEVATION);
+}
+
 describe('3D 手牌レイアウト', () => {
-  it('14 枚を左から右へ、中央寄せで並べる', () => {
+  it('14 枚を左から右へ、中央寄せで並べる（1 段）', () => {
     const layout = layoutHand({ concealed: fourteen, winTile: fourteen[13] });
+    expect(layout.rows).toBe(1);
     expect(layout.items).toHaveLength(14);
     expect(layout.width).toBeCloseTo(14 * TILE_WIDTH + 13 * TILE_GAP, 6);
     expect(layout.items[0].x).toBeCloseTo(-layout.width / 2 + TILE_WIDTH / 2, 6);
@@ -58,7 +78,72 @@ describe('3D 手牌レイアウト', () => {
         TILE_WIDTH + TILE_GAP,
         6,
       );
+      expect(layout.items[index].z).toBeCloseTo(
+        layout.items[index].highlight ? 0.08 : 0,
+        6,
+      );
     }
+  });
+
+  it('maxPerRow=7 で 7 + 7 の 2 段に折り返す', () => {
+    const layout = layoutHand({
+      concealed: fourteen,
+      winTile: fourteen[13],
+      maxPerRow: 7,
+    });
+    expect(layout.rows).toBe(2);
+    expect(layout.items).toHaveLength(14);
+    const first = layout.items.filter((item) => item.row === 0);
+    const second = layout.items.filter((item) => item.row === 1);
+    expect(first).toHaveLength(7);
+    expect(second).toHaveLength(7);
+    // 読む順の先頭が奥（上）、後半が手前（下）。
+    expect(first[0].z).toBeCloseTo(-ROW_DEPTH, 6);
+    expect(second[0].z).toBeCloseTo(0, 6);
+    // それぞれの段は独立に中央寄せ。
+    for (const row of [first, second]) {
+      expect(row[0].x).toBeCloseTo(-row[row.length - 1].x, 6);
+      for (let index = 1; index < row.length; index += 1) {
+        expect(row[index].x).toBeGreaterThan(row[index - 1].x);
+      }
+    }
+    // 2 段はスクリーン上で上下に重ならない。
+    const backBottom = Math.min(...first.map((item) => vertical(item, 'bottom')));
+    const frontTop = Math.max(...second.map((item) => vertical(item, 'top')));
+    expect(backBottom).toBeGreaterThan(frontTop);
+    expect(layout.width).toBeCloseTo(7 * TILE_WIDTH + 6 * TILE_GAP, 6);
+  });
+
+  it('副露は分割せず、2 段でも右端に置く', () => {
+    const layout = layoutHand({
+      concealed: fourteen.slice(0, 11),
+      melds: [chi],
+      maxPerRow: 7,
+    });
+    expect(layout.rows).toBe(2);
+    expect(layout.items).toHaveLength(14);
+    const meldItems = layout.items.filter((item) => item.group === 'meld');
+    const concealed = layout.items.filter((item) => item.group === 'concealed');
+    expect(meldItems).toHaveLength(3);
+    expect(meldItems.every((item) => item.row === meldItems[0].row)).toBe(true);
+    expect(concealed).toHaveLength(11);
+    expect(layout.items.filter((item) => item.row === 0)).toHaveLength(7);
+    expect(layout.items.filter((item) => item.row === 1)).toHaveLength(7);
+    // 副露は同じ段の手牌より右（段ごとに中央寄せ）。
+    const meldRow = meldItems[0].row;
+    const sameRowConcealed = concealed.filter((item) => item.row === meldRow);
+    expect(Math.min(...meldItems.map((item) => item.x))).toBeGreaterThan(
+      Math.max(...sameRowConcealed.map((item) => item.x)),
+    );
+  });
+
+  it('段数は maxPerRow に収まるなら 1 段のまま', () => {
+    const layout = layoutHand({
+      concealed: fourteen.slice(0, 6),
+      maxPerRow: 7,
+    });
+    expect(layout.rows).toBe(1);
+    expect(layout.items).toHaveLength(6);
   });
 
   it('牌は下端が卓に接し、和了牌だけが浮く', () => {
@@ -134,11 +219,35 @@ describe('3D 手牌レイアウト', () => {
     expect(layout.dora?.scale).toBeLessThan(1);
     expect(layout.dora?.x).toBeGreaterThan(layout.width / 2);
     expect(layout.dora?.z).toBe(DORA_DEPTH);
-    // ドラ表示牌の右端までカメラの画角に収まる。
-    expect(layout.dora?.x ?? 0).toBeLessThan(sceneWidth(layout) / 2 - 0.4);
-    expect(sceneWidth(layout)).toBeGreaterThan(layout.width);
-    expect(sceneWidth({ ...layout, dora: null })).toBeGreaterThanOrEqual(
-      layout.width,
+    // 2 段では奥の段と同じ高さ（卓の右上）。
+    const twoRows = layoutHand({
+      concealed: fourteen,
+      doraIndicator: dora,
+      maxPerRow: 7,
+    });
+    expect(twoRows.dora?.z).toBe(-ROW_DEPTH);
+  });
+
+  it('bounds は手牌・副露・ドラをすべて含む', () => {
+    const layout = layoutHand({
+      concealed: fourteen.slice(0, 11),
+      melds: [chi],
+      winTile: fourteen[10],
+      doraIndicator: { suit: 'm', rank: 9 },
+      maxPerRow: 7,
+    });
+    const all = layout.dora ? [...layout.items, layout.dora] : layout.items;
+    for (const item of all) {
+      const { halfX, halfY, halfZ } = extents(item);
+      expect(layout.bounds.minX).toBeLessThanOrEqual(item.x - halfX + 1e-9);
+      expect(layout.bounds.maxX).toBeGreaterThanOrEqual(item.x + halfX - 1e-9);
+      expect(layout.bounds.minY).toBeLessThanOrEqual(item.y - halfY + 1e-9);
+      expect(layout.bounds.maxY).toBeGreaterThanOrEqual(item.y + halfY - 1e-9);
+      expect(layout.bounds.minZ).toBeLessThanOrEqual(item.z - halfZ + 1e-9);
+      expect(layout.bounds.maxZ).toBeGreaterThanOrEqual(item.z + halfZ - 1e-9);
+    }
+    expect(layout.bounds.maxZ - layout.bounds.minZ).toBeGreaterThan(
+      ROW_DEPTH,
     );
   });
 
@@ -148,12 +257,14 @@ describe('3D 手牌レイアウト', () => {
       melds: [chi],
       winTile: fourteen[5],
       doraIndicator: { suit: 'm', rank: 9 },
+      maxPerRow: 7,
     });
     const second = layoutHand({
       concealed: fourteen,
       melds: [chi],
       winTile: fourteen[5],
       doraIndicator: { suit: 'm', rank: 9 },
+      maxPerRow: 7,
     });
     expect(second).toEqual(first);
   });

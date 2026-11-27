@@ -99,6 +99,30 @@ describe('練習の手牌表示モード', () => {
     );
     expect(screen.getAllByTestId('choice')).toHaveLength(4);
   });
+
+  it('狭すぎるステージでは CSS 3D とデスクトップ推奨を表示する（設定は three のまま）', () => {
+    const originalWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      value: 220,
+    });
+    try {
+      renderPractice('three');
+      const stage = screen.getByTestId('hand-stage');
+      expect(stage).toHaveAttribute('data-hand-requested', 'three');
+      expect(stage).toHaveAttribute('data-hand-mode', 'css3d');
+      expect(screen.getByTestId('hand-mode-label')).toHaveTextContent('CSS 3D');
+      expect(screen.getByTestId('hand-fallback')).toHaveTextContent(
+        'リアル 3D はデスクトップ推奨です',
+      );
+      expect(screen.queryByTestId('three-hand')).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        value: originalWidth,
+      });
+    }
+  });
 });
 
 describe('設定の表示モード', () => {
