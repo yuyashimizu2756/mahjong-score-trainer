@@ -1,9 +1,61 @@
-import type { WinContext } from '../engine/types';
+import type { Meld, Tile as TileType, WinContext } from '../engine/types';
+import { doraFromIndicator, sameTile } from '../engine/tiles';
+import { tileJaLabel } from '../lib/tile-label';
 import { Tile } from './Tile';
-import { Badge } from './ui';
 import { windLabel } from '../lib/format';
 
-export function SituationChips({ ctx }: { ctx: WinContext }) {
+function countKind(tiles: readonly TileType[], target: TileType): number {
+  return tiles.filter((tile) => sameTile(tile, target)).length;
+}
+
+interface DoraRowProps {
+  label: string;
+  indicators: readonly TileType[];
+  handTiles: readonly TileType[];
+  /** 裏ドラなど、文脈を読み上げ名に含めるための接頭辞。 */
+  ariaPrefix: string;
+}
+
+function DoraRow({ label, indicators, handTiles, ariaPrefix }: DoraRowProps) {
+  return (
+    <>
+      {indicators.map((indicator, index) => {
+        const dora = doraFromIndicator(indicator);
+        const count = countKind(handTiles, dora);
+        return (
+          <div
+            key={`${ariaPrefix}-${index}`}
+            aria-label={`${ariaPrefix} ${tileJaLabel(indicator)} → ドラ ${tileJaLabel(dora)}、手牌に ${count} 枚`}
+            className="flex flex-wrap items-center gap-1.5 text-[11px]"
+          >
+            <span className="text-[9px] uppercase tracking-wide opacity-65">
+              {label}
+            </span>
+            <Tile tile={indicator} size="sm" />
+            <span aria-hidden="true" className="text-ink-500">
+              →
+            </span>
+            <Tile tile={dora} size="sm" />
+            <span className="whitespace-nowrap font-semibold">
+              {tileJaLabel(dora)} ×{count}
+            </span>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+export function SituationChips({
+  ctx,
+  concealed = [],
+  melds = [],
+}: {
+  ctx: WinContext;
+  /** 手牌（和了牌を含む）。ドラ・赤ドラの枚数に使う。 */
+  concealed?: readonly TileType[];
+  melds?: readonly Meld[];
+}) {
   const chips: Array<{
     label: string;
     value: string;
@@ -16,11 +68,32 @@ export function SituationChips({ ctx }: { ctx: WinContext }) {
     value: ctx.tsumo ? 'ツモ' : 'ロン',
     tone: ctx.tsumo ? 'jade' : 'gold',
   });
-  if (ctx.doubleRiichi)
-    chips.push({ label: '立直', value: 'ダブル立直', tone: 'vermilion' });
-  else if (ctx.riichi)
-    chips.push({ label: '立直', value: '立直', tone: 'vermilion' });
-  if (ctx.ippatsu) chips.push({ label: '一発', value: 'あり', tone: 'vermilion' });
+  chips.push({
+    label: 'リーチ',
+    value: ctx.doubleRiichi
+      ? 'ダブル立直'
+      : ctx.riichi
+        ? '立直'
+        : 'なし',
+    tone: ctx.doubleRiichi || ctx.riichi ? 'vermilion' : undefined,
+  });
+  if (ctx.doubleRiichi || ctx.riichi) {
+    chips.push({
+      label: '一発',
+      value: ctx.ippatsu ? 'あり' : 'なし',
+      tone: ctx.ippatsu ? 'vermilion' : undefined,
+    });
+  }
+
+  const handTiles = [
+    ...concealed,
+    ...melds.flatMap((meld) => meld.tiles),
+  ];
+  const redCount = handTiles.filter((tile) => tile.red).length;
+  if (redCount > 0) {
+    chips.push({ label: '赤ドラ', value: String(redCount), tone: 'vermilion' });
+  }
+
   if (ctx.haitei) chips.push({ label: '海底', value: '海底摸月' });
   if (ctx.houtei) chips.push({ label: '河底', value: '河底撈魚' });
   if (ctx.rinshan) chips.push({ label: '嶺上', value: '嶺上開花' });
@@ -29,8 +102,11 @@ export function SituationChips({ ctx }: { ctx: WinContext }) {
   if (ctx.riichiSticks > 0)
     chips.push({ label: '供託', value: `${ctx.riichiSticks} 本` });
 
+  const riichi = ctx.doubleRiichi || ctx.riichi;
+  const uraIndicators = riichi ? (ctx.uraIndicators ?? []) : [];
+
   return (
-    <div className="space-y-3">
+    <div role="group" aria-label="場況" className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
         {chips.map((chip) => (
           <span
@@ -54,31 +130,31 @@ export function SituationChips({ ctx }: { ctx: WinContext }) {
         ))}
       </div>
 
-      {(ctx.doraIndicators.length > 0 ||
-        (ctx.uraIndicators && ctx.uraIndicators.length > 0)) && (
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
-          {ctx.doraIndicators.length > 0 ? (
-            <div>
-              <Badge tone="neutral">ドラ表示牌</Badge>
-              <div className="mt-1.5 flex gap-1">
-                {ctx.doraIndicators.map((tile, index) => (
-                  <Tile key={`dora-${index}`} tile={tile} size="sm" />
-                ))}
-              </div>
-            </div>
-          ) : null}
-          {ctx.uraIndicators && ctx.uraIndicators.length > 0 ? (
-            <div>
-              <Badge tone="neutral">裏ドラ表示牌</Badge>
-              <div className="mt-1.5 flex gap-1">
-                {ctx.uraIndicators.map((tile, index) => (
-                  <Tile key={`ura-${index}`} tile={tile} size="sm" />
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        {ctx.doraIndicators.length > 0 ? (
+          <DoraRow
+            label="ドラ"
+            indicators={ctx.doraIndicators}
+            handTiles={handTiles}
+            ariaPrefix="ドラ表示牌"
+          />
+        ) : (
+          <p className="flex items-center gap-1.5 text-[11px]">
+            <span className="text-[9px] uppercase tracking-wide opacity-65">
+              ドラ
+            </span>
+            <span className="font-semibold text-ink-700">なし</span>
+          </p>
+        )}
+        {uraIndicators.length > 0 ? (
+          <DoraRow
+            label="裏ドラ"
+            indicators={uraIndicators}
+            handTiles={handTiles}
+            ariaPrefix="裏ドラ表示牌"
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

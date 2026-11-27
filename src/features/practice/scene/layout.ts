@@ -17,6 +17,8 @@ export const MELD_GAP = 0.4;
 export const MELD_TILE_GAP = 0.04;
 /** 和了牌を持ち上げる量。 */
 export const WIN_LIFT = 0.12;
+/** 和了牌を 13 枚から分離するときの、手前の牌との追加の隙間。 */
+export const WIN_GAP = 0.5;
 /** ドラ表示牌の縮尺。 */
 export const DORA_SCALE = 0.62;
 /** 手牌の右端からドラ表示牌までの距離。 */
@@ -80,6 +82,8 @@ export interface HandLayoutInput {
   winTile?: Tile;
   /** ドラ表示牌。手牌には含めず、卓の右上に小さく置く。 */
   doraIndicator?: Tile;
+  /** 和了牌を 13 枚から分離し、gap 付きの右端に置く。 */
+  separateWin?: boolean;
   /** すべて伏せ牌にする（テスト・演出用）。 */
   faceDown?: boolean;
   /**
@@ -176,9 +180,12 @@ function buildUnits(
   concealed: readonly Tile[],
   melds: readonly Meld[],
   winIndex: number,
+  separateWin: boolean,
 ): Unit[] {
   const units: Unit[] = [];
+  const detachedWin = separateWin && winIndex >= 0;
   concealed.forEach((tile, index) => {
+    if (detachedWin && index === winIndex) return;
     const tiles: UnitTile[] = [
       {
         tile,
@@ -210,6 +217,25 @@ function buildUnits(
       width: unitWidth(tiles),
     });
   });
+
+  // 和了牌は副露のさらに右へ、通常の牌間隔より広い gap を空けて置く。
+  if (detachedWin) {
+    const tile = concealed[winIndex];
+    const tiles: UnitTile[] = [
+      {
+        tile,
+        rotated: false,
+        highlight: true,
+        id: `win-${winIndex}-${tile.suit}${tile.rank}`,
+      },
+    ];
+    units.push({
+      group: 'concealed',
+      tiles,
+      gapBefore: WIN_GAP,
+      width: unitWidth(tiles),
+    });
+  }
   return units;
 }
 
@@ -254,7 +280,12 @@ function computeBounds(
 export function layoutHand(input: HandLayoutInput): HandSceneLayout {
   const melds = input.melds ?? [];
   const winIndex = findWinIndex(input.concealed, input.winTile);
-  const units = buildUnits(input.concealed, melds, winIndex);
+  const units = buildUnits(
+    input.concealed,
+    melds,
+    winIndex,
+    input.separateWin ?? false,
+  );
   const totalTiles = units.reduce((sum, unit) => sum + unit.tiles.length, 0);
 
   const maxPerRow =

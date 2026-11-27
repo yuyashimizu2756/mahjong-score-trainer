@@ -9,6 +9,7 @@ import {
   TILE_GAP,
   TILE_HEIGHT,
   TILE_WIDTH,
+  WIN_GAP,
   WIN_LIFT,
   centerY,
   findWinIndex,
@@ -249,6 +250,75 @@ describe('3D 手牌レイアウト', () => {
     expect(layout.bounds.maxZ - layout.bounds.minZ).toBeGreaterThan(
       ROW_DEPTH,
     );
+  });
+
+  it('separateWin で和了牌を gap 付きの右端に置く', () => {
+    const layout = layoutHand({
+      concealed: fourteen,
+      winTile: fourteen[13],
+      separateWin: true,
+    });
+    expect(layout.items).toHaveLength(14);
+    const win = layout.items.find((item) => item.highlight);
+    expect(win).toBeDefined();
+    if (!win) return;
+    const others = layout.items.filter((item) => !item.highlight);
+    expect(win.x).toBeCloseTo(Math.max(...others.map((item) => item.x)) + TILE_WIDTH + WIN_GAP, 6);
+    expect(layout.width).toBeCloseTo(
+      14 * TILE_WIDTH + 12 * TILE_GAP + WIN_GAP,
+      6,
+    );
+    // 通常の牌間隔より広い。
+    expect(WIN_GAP).toBeGreaterThan(TILE_GAP);
+    expect(layout.items.filter((item) => item.highlight)).toHaveLength(1);
+  });
+
+  it('separateWin でも副露のさらに右に和了牌を置く', () => {
+    const layout = layoutHand({
+      concealed: fourteen.slice(0, 11),
+      melds: [chi],
+      winTile: fourteen[10],
+      separateWin: true,
+    });
+    const win = layout.items.find((item) => item.highlight);
+    const melds = layout.items.filter((item) => item.group === 'meld');
+    expect(win).toBeDefined();
+    if (!win) return;
+    expect(win.x).toBeGreaterThan(Math.max(...melds.map((item) => item.x)));
+    expect(win.x).toBeCloseTo(
+      Math.max(...melds.map((item) => item.x)) + TILE_WIDTH + WIN_GAP,
+      6,
+    );
+  });
+
+  it('separateWin の 2 段でも和了牌が他の牌と重ならない', () => {
+    const layout = layoutHand({
+      concealed: fourteen,
+      winTile: fourteen[13],
+      separateWin: true,
+      maxPerRow: 7,
+    });
+    expect(layout.rows).toBe(2);
+    const win = layout.items.find((item) => item.highlight);
+    expect(win?.row).toBe(1);
+    const others = layout.items.filter((item) => item !== win);
+    for (const item of others) {
+      if (!win) break;
+      if (item.row === win.row) {
+        const minDistance =
+          (footprintWidth(item.rotation !== 0) +
+            footprintWidth(win.rotation !== 0)) /
+          2;
+        expect(Math.abs(item.x - win.x)).toBeGreaterThanOrEqual(
+          minDistance - 1e-9,
+        );
+      }
+    }
+    const back = layout.items.filter((item) => item.row === 0);
+    const front = layout.items.filter((item) => item.row === 1);
+    const backBottom = Math.min(...back.map((item) => vertical(item, 'bottom')));
+    const frontTop = Math.max(...front.map((item) => vertical(item, 'top')));
+    expect(backBottom).toBeGreaterThan(frontTop);
   });
 
   it('同じ入力なら同じ出力（決定的）', () => {
