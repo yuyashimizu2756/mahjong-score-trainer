@@ -19,6 +19,7 @@ export interface HomePageProps {
   onNavigateLearn: (lessonId?: string) => void;
   onNavigateYaku: () => void;
   onNavigateChart: () => void;
+  onNavigateMemorize: (sectionId?: string) => void;
 }
 
 export function HomePage({
@@ -26,6 +27,7 @@ export function HomePage({
   onNavigateLearn,
   onNavigateYaku,
   onNavigateChart,
+  onNavigateMemorize,
 }: HomePageProps) {
   const { settings, stats, review, learn } = useAppData();
   const day = stats.byDay[todayKey()] ?? { total: 0, correct: 0 };
@@ -223,6 +225,28 @@ export function HomePage({
             </span>
           </button>
         </div>
+      </section>
+
+      <section className="card flex flex-col gap-4 border-gold/40 p-5 sm:flex-row sm:items-center">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold">
+          <Icon name="memorize" className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-[16px] text-ink-900">覚え方が分からないときは</h2>
+          <p className="mt-0.5 text-[12px] leading-6 text-ink-500">
+            符・点数表・役の覚え方を 6
+            セクションで整理できます。4 種類の暗記ドリルで、間違えた問題だけを間隔をあけて復習します。
+          </p>
+        </div>
+        <Button
+          tone="gold"
+          size="md"
+          className="shrink-0 sm:ml-auto"
+          onClick={() => onNavigateMemorize()}
+          icon={<Icon name="memorize" className="h-4 w-4" />}
+        >
+          覚え方を見る
+        </Button>
       </section>
 
       <section className="grid gap-3 lg:grid-cols-3">

@@ -11,13 +11,37 @@ describe('UI シェル', () => {
     window.history.replaceState(null, '', '#/home');
   });
 
-  it('6 つのタブがデスクトップレールに表示される', () => {
+  it('7 つのタブがデスクトップレールに表示される', () => {
     render(<App />);
     const nav = screen.getByRole('navigation', { name: 'メインナビゲーション' });
-    expect(within(nav).getAllByRole('button')).toHaveLength(6);
-    for (const label of ['ホーム', '学習', '練習', '点数表', '役一覧', '設定']) {
+    expect(within(nav).getAllByRole('button')).toHaveLength(7);
+    for (const label of [
+      'ホーム',
+      '学習',
+      '覚え方',
+      '練習',
+      '点数表',
+      '役一覧',
+      '設定',
+    ]) {
       expect(within(nav).getByRole('button', { name: label })).toBeInTheDocument();
     }
+  });
+
+  it('覚え方タブへ移動でき、学習と練習の間にある', () => {
+    render(<App />);
+    const nav = screen.getByRole('navigation', { name: 'メインナビゲーション' });
+    const labels = within(nav)
+      .getAllByRole('button')
+      .map((button) => button.textContent?.trim());
+    expect(labels.indexOf('覚え方')).toBe(labels.indexOf('学習') + 1);
+    expect(labels.indexOf('覚え方')).toBe(labels.indexOf('練習') - 1);
+
+    fireEvent.click(within(nav).getByRole('button', { name: '覚え方' }));
+    expect(
+      screen.getByRole('heading', { level: 1, name: '覚え方' }),
+    ).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/memorize');
   });
 
   it('タブを切り替えると画面とハッシュが変わる', () => {
@@ -67,6 +91,9 @@ describe('UI シェル', () => {
       screen.getByRole('button', { name: /続きから学習/ }),
     ).toBeInTheDocument();
     expect(screen.getByText('苦手役 Top3')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /覚え方を見る/ }),
+    ).toBeInTheDocument();
   });
 
   it('設定画面で回答方式を切り替えて保存できる', () => {

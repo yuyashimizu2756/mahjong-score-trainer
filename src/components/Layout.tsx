@@ -12,6 +12,7 @@ interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { id: 'home', label: 'ホーム', icon: 'home' },
   { id: 'learn', label: '学習', icon: 'learn' },
+  { id: 'memorize', label: '覚え方', icon: 'memorize' },
   { id: 'practice', label: '練習', icon: 'practice' },
   { id: 'chart', label: '点数表', icon: 'chart' },
   { id: 'yaku', label: '役一覧', icon: 'yaku' },
@@ -212,18 +213,18 @@ export function Layout({
                   onClick={() => onNavigate(item.id)}
                   aria-current={active ? 'page' : undefined}
                   className={[
-                    'relative flex flex-1 flex-col items-center justify-center gap-1 text-[10px]',
+                    'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 whitespace-nowrap text-[9px] leading-none',
                     active ? 'font-semibold text-ivory-50' : 'text-ivory-50/55',
                   ].join(' ')}
                 >
                   {active ? (
                     <span
                       aria-hidden="true"
-                      className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-vermilion"
+                      className="absolute inset-x-3 top-0 h-[2px] rounded-full bg-vermilion"
                     />
                   ) : null}
                   <span className="relative">
-                    <Icon name={item.icon} className="h-5 w-5" />
+                    <Icon name={item.icon} className="h-[18px] w-[18px]" />
                     {item.id === 'practice' && reviewCount > 0 ? (
                       <span className="absolute -right-2 -top-1.5 rounded-full bg-gold px-1 text-[8px] font-bold leading-[13px] text-ink-900">
                         {reviewCount}

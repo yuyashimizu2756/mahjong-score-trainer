@@ -3,6 +3,7 @@ import type { ScoreResult } from '../../engine/types';
 import { computeScore } from '../../engine/score';
 import { parseTiles } from '../../engine/tiles';
 import { LESSONS, type Lesson, type LessonFigure } from '../../data/lessons';
+import { LESSON_GUIDE_LINKS, guideSectionById } from '../memorize/guides';
 import { useAppData } from '../../lib/store';
 import type { Settings } from '../../lib/storage';
 import {
@@ -202,12 +203,14 @@ export interface LearnPageProps {
   settings: Settings;
   initialLessonId?: string;
   onNavigatePractice: () => void;
+  onNavigateMemorize?: (sectionId?: string) => void;
 }
 
 export function LearnPage({
   settings,
   initialLessonId,
   onNavigatePractice,
+  onNavigateMemorize,
 }: LearnPageProps) {
   const { learn, completeLesson } = useAppData();
   const [lessonId, setLessonId] = useState<string>(
@@ -252,6 +255,9 @@ export function LearnPage({
   };
 
   const nextLesson = LESSONS.find((item) => item.number === lesson.number + 1);
+  const guideSection = LESSON_GUIDE_LINKS[lesson.id]
+    ? guideSectionById(LESSON_GUIDE_LINKS[lesson.id])
+    : undefined;
 
   return (
     <div className="space-y-5">
@@ -327,6 +333,15 @@ export function LearnPage({
               tone="ghost"
               size="sm"
               className="w-full"
+              onClick={() => onNavigateMemorize?.()}
+              icon={<Icon name="memorize" className="h-4 w-4" />}
+            >
+              覚え方で整理する
+            </Button>
+            <Button
+              tone="ghost"
+              size="sm"
+              className="mt-1 w-full"
               onClick={onNavigatePractice}
               icon={<Icon name="practice" className="h-4 w-4" />}
             >
@@ -396,6 +411,31 @@ export function LearnPage({
               ))}
             </ul>
           </div>
+
+          {guideSection ? (
+            <div className="mt-4 flex flex-col gap-3 rounded-xl border border-gold/35 bg-gold/10 px-4 py-3 sm:flex-row sm:items-center">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/20 text-ink-900">
+                <Icon name="memorize" className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">
+                  覚え方ガイド
+                </p>
+                <p className="text-[12px] leading-6 text-ink-700">
+                  「{guideSection.title}」で、このレッスンの内容をグループと語呂で整理できます。
+                </p>
+              </div>
+              <Button
+                tone="gold"
+                size="sm"
+                className="shrink-0"
+                onClick={() => onNavigateMemorize?.(guideSection.id)}
+                icon={<Icon name="arrow" className="h-4 w-4" />}
+              >
+                セクションを見る
+              </Button>
+            </div>
+          ) : null}
 
           <section className="mt-7 border-t border-ivory-200 pt-5">
             <div className="flex flex-wrap items-center justify-between gap-2">

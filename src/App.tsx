@@ -10,6 +10,7 @@ import type { ChartFocus } from './lib/chart-focus';
 import { Layout } from './components/Layout';
 import { HomePage } from './features/home/HomePage';
 import { LearnPage } from './features/learn/LearnPage';
+import { MemorizePage } from './features/memorize/MemorizePage';
 import { PracticePage } from './features/practice/PracticePage';
 import { ChartPage } from './features/chart/ChartPage';
 import { YakuPage } from './features/yaku/YakuPage';
@@ -34,6 +35,10 @@ function AppShell() {
   const [learnLessonId, setLearnLessonId] = useState<string | undefined>(
     undefined,
   );
+  const [memorizeSectionId, setMemorizeSectionId] = useState<
+    string | undefined
+  >(undefined);
+  const [memorizeNonce, setMemorizeNonce] = useState(0);
   const [practiceConfig, setPracticeConfig] = useState<PracticeConfig>({
     difficulty: settings.defaultDifficulty,
     review: false,
@@ -61,6 +66,7 @@ function AppShell() {
     const titles: Record<RouteName, string> = {
       home: 'ホーム',
       learn: '学習',
+      memorize: '覚え方',
       practice: '練習',
       chart: '点数表',
       yaku: '役一覧',
@@ -98,10 +104,30 @@ function AppShell() {
     [navigate],
   );
 
+  const openMemorize = useCallback(
+    (sectionId?: string) => {
+      setMemorizeSectionId(sectionId);
+      setMemorizeNonce((previous) => previous + 1);
+      navigate('memorize');
+    },
+    [navigate],
+  );
+
+  const handleNavigate = useCallback(
+    (next: RouteName) => {
+      if (next === 'memorize') {
+        setMemorizeSectionId(undefined);
+        setMemorizeNonce((previous) => previous + 1);
+      }
+      navigate(next);
+    },
+    [navigate],
+  );
+
   return (
     <Layout
       route={route}
-      onNavigate={navigate}
+      onNavigate={handleNavigate}
       reviewCount={review.length}
       reduceMotion={settings.reduceMotion}
     >
@@ -111,6 +137,7 @@ function AppShell() {
           onNavigateLearn={openLearn}
           onNavigateYaku={() => navigate('yaku')}
           onNavigateChart={() => navigate('chart')}
+          onNavigateMemorize={openMemorize}
         />
       ) : null}
 
@@ -119,6 +146,15 @@ function AppShell() {
           settings={settings}
           initialLessonId={learnLessonId}
           onNavigatePractice={() => startPractice()}
+          onNavigateMemorize={openMemorize}
+        />
+      ) : null}
+
+      {route === 'memorize' ? (
+        <MemorizePage
+          key={`${memorizeNonce}:${memorizeSectionId ?? 'hub'}`}
+          settings={settings}
+          initialSectionId={memorizeSectionId}
         />
       ) : null}
 

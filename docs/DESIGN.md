@@ -21,10 +21,18 @@
 |---|---|
 | ホーム | 学習進捗、今日の成績、クイック開始（学習/練習/点数表/役一覧） |
 | 学習 | 6 レッスンのステップ式解説 + 各レッスン末の確認問題 |
+| 覚え方 | 6 セクションの読み物 + 4 種類の暗記ドリル（間隔反復）。学習と練習の間 |
 | 練習 | 出題 → 回答（翻/符/点数）→ 採点 → 解説 → 次へ。難易度 3 段階、復習キュー |
 | 点数表 | 子/親 × ツモ/ロン、符 × 翻。現在の問題のセルをハイライト |
 | 役一覧 | 検索・絞り込み可能な役カタログ（門前/副露の翻数、条件、例） |
 | 設定 | 出題範囲、表示（牌の色/サイズ）、成績リセット、データ削除 |
+
+### 覚え方と間隔反復
+
+- 覚え方ガイドは `src/features/memorize/guides.ts` のデータ駆動。6 セクション（4 ステップ・符・点数表・役・反復・語呂）。
+- 暗記ドリルは `src/features/memorize/drills.ts` の純粋関数。点数表穴埋め・符カウント・翻数カード・支払いクイズの 4 種類。
+- 習熟度は `src/lib/srs.ts`。level 0〜5、復習間隔 1/3/7/14/30 日、1 セッション 10 問。期限が来たカードを優先する。
+- 保存は `mst:v1:drill`。ドリル成績は既存の練習成績と分けて集計する。
 
 ## 技術構成
 
@@ -52,11 +60,11 @@ src/
     problem.ts     # 出題生成（シード付き乱数）
     index.ts
   features/
-    home/ learn/ practice/ chart/ yaku/ settings/
+    home/ learn/ memorize/ practice/ chart/ yaku/ settings/
   components/      # Tile, Hand, Meld, Layout, 選択肢, ゲージ等
-  lib/             # storage, format, rng, classnames
+  lib/             # storage, format, rng, classnames, srs
   styles/
-tests/             # エンジンの単体テスト（tests/engine/*.test.ts）
+tests/             # エンジン・UI・ドリル生成のテスト
 ```
 
 ## エンジン公開 API（変更禁止・UI はこれだけに依存する）
@@ -177,10 +185,11 @@ export function generateProblem(opts: {
 - `npm run typecheck` / `npm run test` / `npm run build` がすべて成功。
 - エンジンのテストは 120 ケース以上。役・符・点数・上限・支払い・不正入力を網羅。
 - 出題生成のテスト: 3 難易度 × 1000 問を生成し、すべて `ok: true`・役 1 以上・支払いが点数表と一致。
+- 暗記ドリル: 4 種類 × 100 シードで選択肢の重複なし・正解を含む・解説あり。SRS の間隔と期限、保存を検証。
 - Lighthouse 相当の確認は不要。初回表示 1 秒以内（ローカル）。
 - README に起動・ビルド・配布（単一 HTML）・ルールの前提を記載。
 
 ## マイルストーン
 
-- v0.1.0: エンジン + 学習 + 練習 + 点数表 + 役一覧 + 設定 + テスト + CI
+- v0.1.0: エンジン + 学習 + 覚え方 + 練習 + 点数表 + 役一覧 + 設定 + テスト + CI
 - v0.2.0（将来）: 苦手分析の強化、出題のブックマーク、印刷用点数表、Tauri ラップ
