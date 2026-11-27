@@ -119,21 +119,29 @@ background:
 - **CSS 3D**: 手牌コンテナに `perspective(1200px) rotateX(14deg)`。牌は `translateZ(6px)`、和了牌は
   `translateZ(14px)` で浮かせる。牌の下に接地域の影、和了牌は金の縁と淡い発光。
   副露は既存どおり右端の鳴き牌を 90 度回す。360px では 2〜3 段に折り返す。
+  640px 以下は `padding: 12px 2px 22px` / `row-gap: 14px` に詰め、回答ボタンを近づける。
   `prefers-reduced-motion: reduce` ではホバーとトランジションを止め、傾きだけ残す。
 - **リアル 3D（Three.js）**: `React.lazy` + 動的 import。選んだときだけ読み込む。
   - 深緑のフェルト（roughness 0.97）、角丸の直方体（幅:高さ:厚み = 1 : 1.35 : 0.55）。
   - 牌面は `tileFaceSvg(tile, { showSuitMark: false })` を Canvas に描いた `CanvasTexture`
     （牌種ごとにキャッシュ、赤 5・字牌・裏を含む）。
   - 和了牌は金の縁 + emissive、ドラ表示牌は卓の右上に 0.62 倍で置く。
-  - `OrthographicCamera` を `(0, 7.5, 9.5)` 付近から `lookAt(0, 0, 0)`。ドラッグで水平 ±25°、
-    垂直 ±10°。ホイールは奪わない。「視点をリセット」ボタンとダブルクリックで戻す。
-  - HemisphereLight + DirectionalLight + `Plane` + `ShadowMaterial` の接地影、`ACESFilmicToneMapping`。
+  - **段組み**: 手牌全体を 1 段に並べ、ステージ幅 640px 未満またはアスペクト 2.2 未満なら
+    7 + 7 の 2 段に折り返す（副露は分割しない。奥の段が読む順の先頭）。
+  - **カメラ**: `OrthographicCamera` を `(0, 6.5, 9)` から `lookAt(0, 0, 0)`。
+    手牌・副露・ドラの bounding box を投影し、各辺 6% の余白でフィット（内容が約 88%）。
+    ステージはデスクトップ 200px / モバイル 170px。ドラッグで水平 ±25°、垂直 ±10°。
+    ホイールは奪わない。「視点をリセット」ボタンとダブルクリックで戻す。
+  - HemisphereLight + DirectionalLight + `Plane` + `ShadowMaterial` の接地影、`ACESFilmicToneMapping`
+    （exposure 1.1）。
   - DPR は最大 2、`ResizeObserver`、変化時だけ RAF を 1 回。タブ非表示・画面外では停止。
     アンマウント時に geometry / material / texture / renderer を dispose。
   - WebGL が使えない・読み込みに失敗した場合は CSS 3D に自動で戻し、その旨を表示する。
+    2 段にしても牌幅が 28px を下回る狭いステージでは
+    「リアル 3D はデスクトップ推奨です」と表示して CSS 3D に戻す（設定は `three` のまま）。
   - canvas は `aria-hidden="true"`。同じ手牌を「二萬 三萬 …（和了牌）」の DOM テキストでも出し、
     「和了牌: 六索」のラベルも添える。回答・ヒント・次へはすべて DOM のボタン。
-  - 狭い画面では牌が小さくなるため、CSS 3D / 2D を推奨する。
+  - 360px でも 2 段 + フィットで牌幅 30px 以上を確保するが、さらに狭い画面では CSS 3D / 2D を推奨する。
 
 ### 点数表
 - タブ 4 つ。表は横スクロール可。ヘッダー固定。

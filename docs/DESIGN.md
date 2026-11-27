@@ -179,16 +179,23 @@ export function generateProblem(opts: {
 - CSS 3D は追加依存なし。`perspective` + `rotateX(14deg)` + 牌ごとの `translateZ`。
 - Three.js は `React.lazy(() => import('./scene/ThreeHand'))` で分離し、3D を選んだときだけ評価する。
   jsdom・WebGL 非対応環境では `isWebGLAvailable()` が false になり、読み込まずに CSS 3D を出す。
+- 段組み: ステージ幅 640px 未満またはアスペクト 2.2 未満では 7 + 7 の 2 段。行の分割は
+  副露を壊さず、幅のバランスが最も良い境界を選ぶ。奥の段が読む順の先頭。
+- フレーミング: 手牌 + 副露 + ドラの bounding box をカメラ座標に投影し、OrthographicCamera の
+  left/right/top/bottom を非対称に設定して中央寄せ・約 88% フィット（各辺 6% 余白）。
+- 狭すぎるステージ（牌幅 28px 未満）では CSS 3D に戻し、「リアル 3D はデスクトップ推奨です」を表示。
 - `src/features/practice/scene/` の構成:
-  - `layout.ts` — 手牌・副露・和了牌・ドラ表示牌の座標（純粋関数）
+  - `layout.ts` — 手牌・副露・和了牌・ドラ表示牌の座標、2 段折り返し、bounds（純粋関数）
+  - `fit.ts` — bounds の投影と OrthographicCamera のフラストム計算
+  - `framing.ts` — 段数・牌幅の見積もり・CSS 3D フォールバック判定
   - `textures.ts` — 牌 → テクスチャキー（38 種）と CanvasTexture の元 Canvas
-  - `camera.ts` — OrthographicCamera の軌道（±25° / ±10°）
+  - `camera.ts` — OrthographicCamera の軌道（`(0, 6.5, 9)`、±25° / ±10°）
   - `handText.ts` — 読み上げ用の「二萬 三萬 …（和了牌）」
   - `webgl.ts` — WebGL 判定
-  - `three-hand.ts` — シーン生成・on-demand render・dispose
-  - `ThreeHand.tsx` — React との接続（動的 import の入口）
+  - `three-hand.ts` — シーン生成・フィット・on-demand render・dispose
+  - `ThreeHand.tsx` — React との接続（動的 import の入口、段数の計測）
   - `HandStage.tsx` — モード切替・フォールバック・アクセシビリティ
-- サイズ: three を含む単一 HTML は gzip 約 275KB（予算 400KB）。外部リクエスト 0。
+- サイズ: three を含む単一 HTML は gzip 約 277KB（予算 400KB）。外部リクエスト 0。
 
 ## UI 要件
 
