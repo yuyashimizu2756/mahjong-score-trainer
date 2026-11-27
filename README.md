@@ -28,6 +28,9 @@
 - **設定**: 回答方式、既定難易度、牌サイズ、スート記号、アニメーション低減
   - 成績と復習のリセット / 全データ削除（確認ダイアログ）
   - ルールの前提とバージョン表示
+- **牌**: 萬子・筒子・索子・字牌を実物風の SVG で描画（孔雀・竹・同心円・白の二重枠）
+  - 象牙色の面・面取り・右側面の厚み・落ち影・深緑の裏面
+  - 赤 5、和了牌の金の縁、副露の 90 度回転に対応
 
 効果音はありません。外部フォント・画像・CDN・API へのリクエストもありません。
 
@@ -110,7 +113,7 @@ src/
     problem.ts     # generateProblem（seed 付き決定論的乱数）
   data/            # レッスン本文・役カタログ
   features/        # home / learn / practice / chart / yaku / settings
-  components/      # Tile, Hand, Layout, ResultPanel, ui, Icon
+  components/      # Tile（tile/ に本体・牌面 SVG・文字列生成）, Hand, Layout, ResultPanel, ui, Icon
   lib/             # storage, format, choices, score-table, explain, router, store
   styles/          # Tailwind 4 とデザイントークン
   App.tsx          # ハッシュルーティングと画面の組み立て
