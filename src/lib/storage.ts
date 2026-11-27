@@ -16,12 +16,26 @@ export const STORAGE_KEYS = {
   drill: `${STORAGE_PREFIX}drill`,
 } as const;
 
+/** 練習の手牌の表示モード。2D / CSS 3D / Three.js。 */
+export type DisplayMode = '2d' | 'css3d' | 'three';
+
+export const DISPLAY_MODES: readonly DisplayMode[] = [
+  '2d',
+  'css3d',
+  'three',
+] as const;
+
+export function isDisplayMode(value: unknown): value is DisplayMode {
+  return value === '2d' || value === 'css3d' || value === 'three';
+}
+
 export interface Settings {
   answerMode: 'choice' | 'step';
   defaultDifficulty: Difficulty;
   tileSize: 'sm' | 'md' | 'lg';
   colorBlindSuits: boolean;
   reduceMotion: boolean;
+  displayMode: DisplayMode;
 }
 
 export interface DayRecord {
@@ -63,6 +77,7 @@ export const DEFAULT_SETTINGS: Settings = {
   tileSize: 'md',
   colorBlindSuits: true,
   reduceMotion: false,
+  displayMode: 'css3d',
 };
 
 export const DEFAULT_STATS: Stats = {
@@ -105,7 +120,9 @@ function isSettings(value: unknown): value is Settings {
     isDifficulty(value.defaultDifficulty) &&
     (size === 'sm' || size === 'md' || size === 'lg') &&
     typeof value.colorBlindSuits === 'boolean' &&
-    typeof value.reduceMotion === 'boolean'
+    typeof value.reduceMotion === 'boolean' &&
+    // displayMode を持たない古い保存データも受け付ける（既定は css3d）。
+    (value.displayMode === undefined || isDisplayMode(value.displayMode))
   );
 }
 
@@ -265,7 +282,16 @@ export function initStorage(): void {
 
 export function loadSettings(): Settings {
   const value = readJson(STORAGE_KEYS.settings);
-  if (isSettings(value)) return { ...DEFAULT_SETTINGS, ...value };
+  if (isSettings(value)) {
+    return {
+      ...DEFAULT_SETTINGS,
+      ...value,
+      // 古いデータに displayMode がない場合は既定（css3d）へ寄せる。
+      displayMode: isDisplayMode(value.displayMode)
+        ? value.displayMode
+        : DEFAULT_SETTINGS.displayMode,
+    };
+  }
   if (value !== undefined) removeKey(STORAGE_KEYS.settings);
   return { ...DEFAULT_SETTINGS };
 }

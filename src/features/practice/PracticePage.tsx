@@ -10,7 +10,7 @@ import {
   type PointChoice,
 } from '../../lib/choices';
 import { difficultyLabel, formatFu, formatHan, percent } from '../../lib/format';
-import { Hand } from '../../components/Hand';
+import { HandStage } from './HandStage';
 import { Icon } from '../../components/Icon';
 import { ResultPanel } from '../../components/ResultPanel';
 import { SituationChips } from '../../components/SituationChips';
@@ -491,12 +491,12 @@ export function PracticePage({
               <SituationChips ctx={problem.input.ctx} />
 
               <div className="-mx-2 rounded-xl border border-ivory-200 bg-ivory-100/70 p-2 sm:mx-0 sm:p-4">
-                <Hand
+                <HandStage
                   concealed={problem.input.concealed}
                   melds={problem.input.melds}
                   winTile={problem.input.winTile}
-                  size={settings.tileSize}
-                  showSuitMark={settings.colorBlindSuits}
+                  doraIndicator={problem.input.ctx.doraIndicators[0]}
+                  settings={settings}
                 />
               </div>
 
