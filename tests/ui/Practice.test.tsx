@@ -16,6 +16,27 @@ import type { ChartFocus } from '../../src/lib/chart-focus';
 
 const SEED = 12345;
 
+interface ScrollCall {
+  element: Element;
+  block?: ScrollLogicalPosition;
+  behavior?: ScrollBehavior;
+}
+
+let scrollCalls: ScrollCall[] = [];
+
+function recordScrollCalls(): void {
+  Element.prototype.scrollIntoView = function (
+    this: Element,
+    options?: boolean | ScrollIntoViewOptions,
+  ): void {
+    scrollCalls.push({
+      element: this,
+      block: typeof options === 'object' ? options.block : undefined,
+      behavior: typeof options === 'object' ? options.behavior : undefined,
+    });
+  };
+}
+
 function renderPractice(options?: {
   settings?: Settings;
   seed?: number;
@@ -57,6 +78,8 @@ describe('練習フロー', () => {
   beforeEach(() => {
     window.localStorage.clear();
     initStorage();
+    scrollCalls = [];
+    recordScrollCalls();
   });
 
   it('出題 → 正解選択 → 結果表示 → 次へ', async () => {
@@ -68,6 +91,20 @@ describe('練習フロー', () => {
 
     fireEvent.click(correctChoice());
     const panel = await screen.findByTestId('result-panel');
+    const title = within(panel).getByRole('heading', {
+      level: 2,
+      name: '正解',
+    });
+    expect(title).toHaveFocus();
+    expect(title).toHaveAttribute('tabindex', '-1');
+    expect(
+      scrollCalls.some(
+        (call) =>
+          call.element === panel &&
+          call.block === 'start' &&
+          call.behavior === 'smooth',
+      ),
+    ).toBe(true);
     expect(within(panel).getByText('正解')).toBeInTheDocument();
     expect(
       within(panel).getByText(formatNumber(problem.answer.payments.total)),
@@ -86,6 +123,31 @@ describe('練習フロー', () => {
     expect(screen.queryByTestId('result-panel')).not.toBeInTheDocument();
     expect(screen.getByText('第 2 問')).toBeInTheDocument();
     expect(screen.getAllByTestId('choice')).toHaveLength(4);
+    const problemCard = screen.getByTestId('problem-card');
+    expect(
+      scrollCalls.some(
+        (call) =>
+          call.element === problemCard &&
+          call.block === 'start' &&
+          call.behavior === 'smooth',
+      ),
+    ).toBe(true);
+  });
+
+  it('reduceMotion ではスクロールを auto にする', async () => {
+    renderPractice({
+      settings: { ...DEFAULT_SETTINGS, reduceMotion: true },
+    });
+    fireEvent.click(correctChoice());
+    const panel = await screen.findByTestId('result-panel');
+    expect(
+      scrollCalls.some(
+        (call) =>
+          call.element === panel &&
+          call.block === 'start' &&
+          call.behavior === 'auto',
+      ),
+    ).toBe(true);
   });
 
   it('誤答は復習キューに入り、成績に反映される', async () => {

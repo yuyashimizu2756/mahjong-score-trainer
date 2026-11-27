@@ -179,7 +179,10 @@ export function Layout({
           </nav>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto scroll-pb-20 desk:flex-1 desk:overflow-visible desk:scroll-pb-0">
+        <div
+          data-scroll-root
+          className="min-h-0 flex-1 overflow-y-auto scroll-pb-20 desk:flex-1 desk:overflow-visible desk:scroll-pb-0"
+        >
           <main className="mx-auto w-full max-w-[1120px] px-4 pb-10 pt-6 tab:px-6 desk:pb-12 desk:pt-9">
             {children}
           </main>

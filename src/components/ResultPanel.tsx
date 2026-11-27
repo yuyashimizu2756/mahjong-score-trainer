@@ -1,4 +1,5 @@
 import type { Problem } from '../engine/types';
+import type { RefObject } from 'react';
 import { explainResult } from '../lib/explain';
 import {
   formatFu,
@@ -21,6 +22,8 @@ export interface ResultPanelProps {
   onNext: () => void;
   onChart: (focus: ChartFocus) => void;
   onAddReview: () => void;
+  panelRef?: RefObject<HTMLElement | null>;
+  titleRef?: RefObject<HTMLHeadingElement | null>;
 }
 
 function Formula({ problem }: { problem: Problem }) {
@@ -67,6 +70,8 @@ export function ResultPanel({
   onNext,
   onChart,
   onAddReview,
+  panelRef,
+  titleRef,
 }: ResultPanelProps) {
   const { answer, input } = problem;
   const { ctx } = input;
@@ -83,9 +88,10 @@ export function ResultPanel({
 
   return (
     <section
+      ref={panelRef}
       data-testid="result-panel"
       aria-labelledby="result-title"
-      className="card animate-panel overflow-hidden"
+      className="card animate-panel scroll-mt-24 overflow-hidden desk:scroll-mt-6"
     >
       <div
         role="status"
@@ -103,15 +109,17 @@ export function ResultPanel({
           <Icon name={correct ? 'check' : 'cross'} className="h-5 w-5" />
         </span>
         <div className="min-w-0">
-          <p
+          <h2
             id="result-title"
+            ref={titleRef}
+            tabIndex={-1}
             className={[
               'text-sm font-bold',
               correct ? 'text-jade' : 'text-vermilion',
             ].join(' ')}
           >
             {correct ? '正解' : '不正解'}
-          </p>
+          </h2>
           <p className="text-[11px] text-ink-500">
             {correct
               ? '役・符・支払いの流れを確認しましょう。'

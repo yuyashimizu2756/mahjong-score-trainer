@@ -83,6 +83,10 @@ export function PracticePage({
     initialSeed ?? ((Date.now() ^ 0x5f3759df) >>> 0),
   );
   const finishedRef = useRef(false);
+  const resultPanelRef = useRef<HTMLElement>(null);
+  const resultTitleRef = useRef<HTMLHeadingElement>(null);
+  const problemCardRef = useRef<HTMLElement>(null);
+  const shouldScrollToProblemRef = useRef(false);
 
   const [difficulty, setDifficulty] = useState<Difficulty>(
     initialDifficultyValue,
@@ -216,6 +220,7 @@ export function PracticePage({
   };
 
   const next = () => {
+    shouldScrollToProblemRef.current = true;
     if (reviewMode) {
       const remaining = review.filter((item) => item.id !== problem.id);
       if (remaining.length > 0) {
@@ -231,6 +236,7 @@ export function PracticePage({
 
   const changeDifficulty = (nextDifficulty: Difficulty) => {
     if (nextDifficulty === difficulty) return;
+    shouldScrollToProblemRef.current = true;
     setDifficulty(nextDifficulty);
     setReviewMode(false);
     setSession(EMPTY_SESSION);
@@ -258,6 +264,22 @@ export function PracticePage({
       yakumanCount: problem.answer.yakumanCount,
     });
   };
+
+  // 採点結果が画面外に出ないよう、先頭へスクロールして見出しにフォーカスする。
+  useEffect(() => {
+    if (phase !== 'result') return;
+    const behavior = settings.reduceMotion ? 'auto' : 'smooth';
+    resultPanelRef.current?.scrollIntoView({ block: 'start', behavior });
+    resultTitleRef.current?.focus({ preventScroll: true });
+  }, [phase, settings.reduceMotion]);
+
+  // 「次へ」のあとは次の問題カードの先頭へ戻す。
+  useEffect(() => {
+    if (phase !== 'answering' || !shouldScrollToProblemRef.current) return;
+    shouldScrollToProblemRef.current = false;
+    const behavior = settings.reduceMotion ? 'auto' : 'smooth';
+    problemCardRef.current?.scrollIntoView({ block: 'start', behavior });
+  }, [problem.id, phase, settings.reduceMotion]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -421,6 +443,7 @@ export function PracticePage({
             tone="primary"
             className="mt-4"
             onClick={() => {
+              shouldScrollToProblemRef.current = true;
               setReviewMode(false);
               generateNextProblem();
             }}
@@ -431,7 +454,8 @@ export function PracticePage({
       ) : (
         <>
           <section
-            className="card overflow-hidden"
+            ref={problemCardRef}
+            className="card scroll-mt-24 overflow-hidden desk:scroll-mt-6"
             aria-labelledby="problem-title"
             data-testid="problem-card"
             data-problem-id={problem.id}
@@ -654,6 +678,8 @@ export function PracticePage({
               onNext={next}
               onChart={openChart}
               onAddReview={manualAddReview}
+              panelRef={resultPanelRef}
+              titleRef={resultTitleRef}
             />
           ) : (
             <p className="text-center text-[10px] text-ivory-50/35">

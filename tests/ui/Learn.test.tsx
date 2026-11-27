@@ -12,10 +12,12 @@ import {
 function renderLearn() {
   return render(
     <AppProvider>
-      <LearnPage
-        settings={DEFAULT_SETTINGS}
-        onNavigatePractice={vi.fn()}
-      />
+      <div data-scroll-root>
+        <LearnPage
+          settings={DEFAULT_SETTINGS}
+          onNavigatePractice={vi.fn()}
+        />
+      </div>
     </AppProvider>,
   );
 }
@@ -31,10 +33,38 @@ function answerQuiz(lesson: (typeof LESSONS)[number], correct: boolean) {
   }
 }
 
+function stubQuizRects(feedbackVisible: boolean) {
+  const original = Element.prototype.getBoundingClientRect;
+  const rect = (top: number, bottom: number): DOMRect =>
+    ({
+      top,
+      bottom,
+      left: 0,
+      right: 700,
+      width: 700,
+      height: bottom - top,
+      x: 0,
+      y: top,
+      toJSON: () => ({}),
+    }) as DOMRect;
+  return vi
+    .spyOn(Element.prototype, 'getBoundingClientRect')
+    .mockImplementation(function (this: Element) {
+      if (this.hasAttribute('data-scroll-root')) return rect(0, 700);
+      if (this.getAttribute('data-testid') === 'quiz-feedback') {
+        return feedbackVisible ? rect(100, 200) : rect(800, 900);
+      }
+      return original.call(this);
+    });
+}
+
 describe('学習', () => {
   beforeEach(() => {
     window.localStorage.clear();
     initStorage();
+    if (typeof Element.prototype.scrollIntoView !== 'function') {
+      Element.prototype.scrollIntoView = function () {};
+    }
   });
 
   it('6 レッスンの一覧と本文を表示する', () => {
@@ -52,6 +82,40 @@ describe('学習', () => {
       screen.getByRole('heading', { level: 2, name: '点数計算の全体像' }),
     ).toBeInTheDocument();
     expect(screen.getByText('確認問題')).toBeInTheDocument();
+  });
+
+  it('確認問題の回答後、見えていなければフィードバックへスクロールする', () => {
+    const scrollSpy = vi.fn();
+    Element.prototype.scrollIntoView = scrollSpy;
+    const rectSpy = stubQuizRects(false);
+    try {
+      renderLearn();
+      const quiz = LESSONS[0].quizzes[0];
+      const block = screen.getByTestId(`quiz-${quiz.id}`);
+      fireEvent.click(within(block).getAllByTestId('quiz-choice')[quiz.correctIndex]);
+      expect(scrollSpy).toHaveBeenCalledWith({
+        block: 'nearest',
+        behavior: 'smooth',
+      });
+      expect(screen.getByTestId('quiz-feedback')).toBeInTheDocument();
+    } finally {
+      rectSpy.mockRestore();
+    }
+  });
+
+  it('フィードバックがすでに見える場合はスクロールしない', () => {
+    const scrollSpy = vi.fn();
+    Element.prototype.scrollIntoView = scrollSpy;
+    const rectSpy = stubQuizRects(true);
+    try {
+      renderLearn();
+      const quiz = LESSONS[0].quizzes[0];
+      const block = screen.getByTestId(`quiz-${quiz.id}`);
+      fireEvent.click(within(block).getAllByTestId('quiz-choice')[quiz.correctIndex]);
+      expect(scrollSpy).not.toHaveBeenCalled();
+    } finally {
+      rectSpy.mockRestore();
+    }
   });
 
   it('確認問題にすべて正解するとレッスン完了が保存される', async () => {

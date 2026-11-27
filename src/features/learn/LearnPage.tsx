@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ScoreResult } from '../../engine/types';
 import { computeScore } from '../../engine/score';
 import { parseTiles } from '../../engine/tiles';
@@ -99,14 +99,37 @@ function QuizBlock({
   selected,
   onSelect,
   onRetry,
+  reduceMotion,
 }: {
   quiz: Lesson['quizzes'][number];
   selected: number | undefined;
   onSelect: (index: number) => void;
   onRetry: () => void;
+  reduceMotion: boolean;
 }) {
   const answered = selected !== undefined;
   const correct = selected === quiz.correctIndex;
+  const feedbackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!answered) return;
+    const feedback = feedbackRef.current;
+    if (!feedback) return;
+    const scroller = feedback.closest('[data-scroll-root]');
+    if (scroller) {
+      const scrollerRect = scroller.getBoundingClientRect();
+      const feedbackRect = feedback.getBoundingClientRect();
+      const alreadyVisible =
+        feedbackRect.top >= scrollerRect.top &&
+        feedbackRect.bottom <= scrollerRect.bottom;
+      if (alreadyVisible) return;
+    }
+    feedback.scrollIntoView({
+      block: 'nearest',
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    });
+  }, [answered, reduceMotion]);
+
   return (
     <div
       data-testid={`quiz-${quiz.id}`}
@@ -153,7 +176,11 @@ function QuizBlock({
         })}
       </div>
       {answered ? (
-        <div className="mt-2.5 rounded-lg border border-ivory-200 bg-ivory-100/70 px-3 py-2 text-[11px] leading-5 text-ink-700">
+        <div
+          ref={feedbackRef}
+          data-testid="quiz-feedback"
+          className="mt-2.5 scroll-mt-24 rounded-lg border border-ivory-200 bg-ivory-100/70 px-3 py-2 text-[11px] leading-5 text-ink-700"
+        >
           <p className="font-semibold text-ink-900">
             {correct ? '正解' : '不正解'}
           </p>
@@ -400,6 +427,7 @@ export function LearnPage({
                       return { ...previous, [lesson.id]: current };
                     })
                   }
+                  reduceMotion={settings.reduceMotion}
                 />
               ))}
             </div>
