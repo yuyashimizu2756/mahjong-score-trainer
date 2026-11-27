@@ -45,6 +45,15 @@ describe('UI シェル', () => {
     ).toBeInTheDocument();
   });
 
+  it('モバイル下部ナビは通常フローで高さを占有する', () => {
+    render(<App />);
+    const quick = screen.getByRole('navigation', {
+      name: 'クイックナビゲーション',
+    });
+    expect(quick.className).not.toContain('fixed');
+    expect(quick.className).toContain('shrink-0');
+  });
+
   it('ホームに導入と主要 3 導線が表示される', () => {
     render(<App />);
     expect(

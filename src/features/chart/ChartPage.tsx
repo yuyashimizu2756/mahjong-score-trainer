@@ -196,9 +196,21 @@ export function ChartPage({ focus }: ChartPageProps) {
               単位: 点 / 100 点未満切り上げ / 本場・供託を含まない
             </p>
           </div>
+          <p
+            id="chart-scroll-hint"
+            className="mt-1 text-[10px] leading-5 text-ink-500"
+          >
+            ← 横にスクロールできます。1 列目の符は固定です。 →
+          </p>
         </div>
 
-        <div className="overflow-x-auto scroll-thin">
+        <div
+          role="region"
+          tabIndex={0}
+          aria-label="点数表。横にスクロールできます。1 列目の符は固定です。"
+          aria-describedby="chart-scroll-hint"
+          className="overflow-x-auto overscroll-x-contain scroll-thin"
+        >
           <table className="w-full min-w-[820px] border-collapse text-[10px]">
             <caption className="sr-only">
               {active.label}の符と翻による点数表

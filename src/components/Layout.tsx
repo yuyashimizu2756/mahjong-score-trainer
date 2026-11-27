@@ -78,7 +78,7 @@ export function Layout({
   return (
     <div
       className={[
-        'min-h-screen desk:grid desk:grid-cols-[216px_minmax(0,1fr)]',
+        'app-shell flex flex-col desk:grid desk:grid-cols-[216px_minmax(0,1fr)]',
         reduceMotion ? 'reduce-motion' : '',
       ].join(' ')}
     >
@@ -130,14 +130,14 @@ export function Layout({
           <p className="text-[10px] leading-5 text-ivory-50/45">
             リーチ麻雀・関東標準
             <br />
-            v0.1.0 / オフライン
+            オフライン
           </p>
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-col">
-        {/* モバイル / タブレット上部 */}
-        <header className="no-print sticky top-0 z-20 border-b border-line bg-felt-900/85 backdrop-blur desk:hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col desk:min-h-screen">
+        {/* モバイル / タブレット上部（スクロール領域の外に固定） */}
+        <header className="no-print z-20 shrink-0 border-b border-line bg-felt-900/85 backdrop-blur desk:hidden">
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <Brand onHome={() => onNavigate('home')} compact />
             <div className="flex items-center gap-2">
@@ -182,57 +182,61 @@ export function Layout({
           </nav>
         </header>
 
-        <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 pb-24 pt-6 tab:px-6 desk:pb-12 desk:pt-9">
-          {children}
-        </main>
+        <div className="min-h-0 flex-1 overflow-y-auto scroll-pb-20 desk:flex-1 desk:overflow-visible desk:scroll-pb-0">
+          <main className="mx-auto w-full max-w-[1120px] px-4 pb-10 pt-6 tab:px-6 desk:pb-12 desk:pt-9">
+            {children}
+          </main>
 
-        <footer className="no-print border-t border-line px-4 py-5 pb-20 text-[10px] leading-5 text-ivory-50/40 desk:pb-5">
-          <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <p>麻雀点数トレーナー v0.1.0 — リーチ麻雀の関東標準ルール</p>
-            <p>採点は docs/RULES.md、保存はこのブラウザの localStorage のみ。</p>
-          </div>
-        </footer>
-      </div>
-
-      {/* モバイル下部ナビ */}
-      <nav
-        aria-label="クイックナビゲーション"
-        className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-felt-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur tab:hidden"
-      >
-        <div className="flex h-16 items-stretch">
-          {NAV_ITEMS.map((item) => {
-            const active = item.id === route;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onNavigate(item.id)}
-                aria-current={active ? 'page' : undefined}
-                className={[
-                  'relative flex flex-1 flex-col items-center justify-center gap-1 text-[10px]',
-                  active ? 'font-semibold text-ivory-50' : 'text-ivory-50/55',
-                ].join(' ')}
-              >
-                {active ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-vermilion"
-                  />
-                ) : null}
-                <span className="relative">
-                  <Icon name={item.icon} className="h-5 w-5" />
-                  {item.id === 'practice' && reviewCount > 0 ? (
-                    <span className="absolute -right-2 -top-1.5 rounded-full bg-gold px-1 text-[8px] font-bold leading-[13px] text-ink-900">
-                      {reviewCount}
-                    </span>
-                  ) : null}
-                </span>
-                {item.label}
-              </button>
-            );
-          })}
+          <footer className="no-print border-t border-line px-4 py-5 text-[10px] leading-5 text-ivory-50/40">
+            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <p>麻雀点数トレーナー v0.1.0 — リーチ麻雀の関東標準ルール</p>
+              <p>
+                採点は docs/RULES.md、保存はこのブラウザの localStorage のみ。
+              </p>
+            </div>
+          </footer>
         </div>
-      </nav>
+
+        {/* モバイル下部ナビ: 通常フローで高さを占有する */}
+        <nav
+          aria-label="クイックナビゲーション"
+          className="no-print shrink-0 border-t border-line bg-felt-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur tab:hidden"
+        >
+          <div className="flex h-16 items-stretch">
+            {NAV_ITEMS.map((item) => {
+              const active = item.id === route;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onNavigate(item.id)}
+                  aria-current={active ? 'page' : undefined}
+                  className={[
+                    'relative flex flex-1 flex-col items-center justify-center gap-1 text-[10px]',
+                    active ? 'font-semibold text-ivory-50' : 'text-ivory-50/55',
+                  ].join(' ')}
+                >
+                  {active ? (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-vermilion"
+                    />
+                  ) : null}
+                  <span className="relative">
+                    <Icon name={item.icon} className="h-5 w-5" />
+                    {item.id === 'practice' && reviewCount > 0 ? (
+                      <span className="absolute -right-2 -top-1.5 rounded-full bg-gold px-1 text-[8px] font-bold leading-[13px] text-ink-900">
+                        {reviewCount}
+                      </span>
+                    ) : null}
+                  </span>
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
     </div>
   );
 }

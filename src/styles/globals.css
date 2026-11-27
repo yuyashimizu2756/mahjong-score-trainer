@@ -126,6 +126,19 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
+/* モバイルはナビを含めた 1 画面レイアウト。desk ではドキュメントスクロールに戻す。 */
+.app-shell {
+  height: 100vh;
+  height: 100dvh;
+}
+
+@media (min-width: 60rem) {
+  .app-shell {
+    height: auto;
+    min-height: 100vh;
+  }
+}
+
 .tile-face {
   background: linear-gradient(180deg, #fffdf7, #efe6d3);
   border: 1px solid #d3c5a8;
@@ -238,12 +251,12 @@ textarea {
 
 /* 点数表のセル */
 .cell-limit {
-  background: rgba(201, 162, 39, 0.24);
-  color: #f4e3a8;
+  background: rgba(201, 162, 39, 0.2);
+  color: #6b4f00;
 }
 .cell-yakuman {
-  background: rgba(201, 79, 61, 0.28);
-  color: #ffd9d0;
+  background: rgba(201, 79, 61, 0.16);
+  color: #8f2f24;
 }
 
 @media print {

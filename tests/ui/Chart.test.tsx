@@ -14,6 +14,21 @@ describe('点数表', () => {
     expect(tablist).toBeInTheDocument();
   });
 
+  it('横スクロールのヒントとキーボード操作可能な領域を持つ', () => {
+    render(<ChartPage focus={null} />);
+    expect(
+      screen.getByText(/横にスクロールできます/),
+    ).toBeInTheDocument();
+    const region = screen.getByRole('region', {
+      name: /点数表。横にスクロールできます/,
+    });
+    expect(region).toHaveAttribute('tabindex', '0');
+    expect(region).toHaveAttribute(
+      'aria-describedby',
+      'chart-scroll-hint',
+    );
+  });
+
   it('子ロン 30 符 3 翻のセルが 3,900', () => {
     render(<ChartPage focus={null} />);
     expect(
