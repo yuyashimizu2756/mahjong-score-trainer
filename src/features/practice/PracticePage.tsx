@@ -490,7 +490,7 @@ export function PracticePage({
             <div className="space-y-4 p-4 sm:p-5">
               <SituationChips ctx={problem.input.ctx} />
 
-              <div className="rounded-xl border border-ivory-200 bg-ivory-100/70 p-3 sm:p-4">
+              <div className="-mx-2 rounded-xl border border-ivory-200 bg-ivory-100/70 p-2 sm:mx-0 sm:p-4">
                 <Hand
                   concealed={problem.input.concealed}
                   melds={problem.input.melds}

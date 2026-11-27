@@ -18,19 +18,19 @@ export interface TileProps {
   className?: string;
 }
 
-/** viewBox 72×100 に対する実寸。比率は 1 : 1.4 で固定。 */
+/** viewBox 72×100 に対する実寸。比率は約 1 : 1.4 で固定。 */
 const SIZE_CLASSES: Record<TileSize, string> = {
-  sm: 'h-[42px] w-[30px]',
-  md: 'h-[56px] w-[40px]',
-  lg: 'h-[72px] w-[52px]',
+  sm: 'h-[45px] w-[32px]',
+  md: 'h-[62px] w-[44px]',
+  lg: 'h-[80px] w-[58px]',
 };
 
 /** 90 度回転すると横幅が高さに変わるため、はみ出す分の余白を確保する。
     下端は他の牌と揃え、横向き牌だけが浮かないようにする。 */
 const ROTATED_LAYOUT: Record<TileSize, string> = {
-  sm: 'mx-[6px] mb-[-6px]',
-  md: 'mx-[8px] mb-[-8px]',
-  lg: 'mx-[10px] mb-[-10px]',
+  sm: 'mx-[6.5px] mb-[-6.5px]',
+  md: 'mx-[9px] mb-[-9px]',
+  lg: 'mx-[11px] mb-[-11px]',
 };
 
 const RANK_KANJI = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];

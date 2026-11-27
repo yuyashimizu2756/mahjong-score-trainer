@@ -26,9 +26,9 @@ const DIFFICULTIES = [
 ];
 
 const TILE_SIZES = [
-  { id: 'sm' as const, label: '小', note: '30 × 42' },
-  { id: 'md' as const, label: '中', note: '40 × 56' },
-  { id: 'lg' as const, label: '大', note: '52 × 72' },
+  { id: 'sm' as const, label: '小', note: '32 × 45' },
+  { id: 'md' as const, label: '中', note: '44 × 62' },
+  { id: 'lg' as const, label: '大', note: '58 × 80' },
 ];
 
 const RULE_POINTS = [

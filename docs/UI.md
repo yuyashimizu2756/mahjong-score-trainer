@@ -61,7 +61,7 @@ background:
 
 実物のリーチ麻雀牌に寄せた、SVG + CSS の牌面。画像・外部フォントは使わない。
 
-- サイズ: sm 30×42、md 40×56、lg 52×72（px）。比率は 1 : 1.4。練習の手牌は md、結果は sm。
+- サイズ: sm 32×45、md 44×62、lg 58×80（px）。比率は約 1 : 1.4。練習の手牌は md、結果は sm。
 - 本体: 象牙色のグラデーション `#fffdf5 → #f7f0dd → #eadcbe`、角丸 7px、内側 1px の罫線、
   右側面 3px の厚み、落ち影 `0 2px 0 #cbb78f, 0 3px 0 #b7a176, 0 8px 14px rgba(0,0,0,.4)`。
 - 牌面は `viewBox="0 0 72 100"` の SVG。色は `TILE_FACE_COLORS` に定数で持ち、`currentColor` に依存しない。

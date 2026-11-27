@@ -68,6 +68,12 @@ describe('牌面の意匠', () => {
     expect(svg.getAttribute('data-face')).toBe('m');
     const man = texts.find((node) => node.textContent === '萬');
     expect(man?.getAttribute('fill')).toBe('#bf4133');
+
+    // 萬子は「萬」が牌面にあるため、スート記号を重ねない。
+    const marked = render(
+      <Tile tile={{ suit: 'm', rank: 5 }} showSuitMark />,
+    );
+    expect(faceOf(marked.container).querySelectorAll('text')).toHaveLength(2);
   });
 
   it('筒子は伝統的なピップ数と配置で描く', () => {
@@ -75,6 +81,10 @@ describe('牌面の意匠', () => {
     const svg = faceOf(container);
     expect(svg.querySelectorAll('circle')).toHaveLength(15);
     expect(svg.querySelector('g.pips')).not.toBeNull();
+    // 通常のピップは半径 8.4・外輪 1.9。
+    const first = svg.querySelector('circle');
+    expect(first?.getAttribute('r')).toBe('8.4');
+    expect(first?.getAttribute('stroke-width')).toBe('1.9');
     // 5 筒は中央の 1 個だけ朱。
     expect(svg.querySelectorAll('[fill="#bf4133"]')).toHaveLength(1);
   });
@@ -85,7 +95,7 @@ describe('牌面の意匠', () => {
     // 外輪・中輪・中心の 3 + 花形の飾り 8。
     expect(svg.querySelectorAll('circle')).toHaveLength(11);
     const big = [...svg.querySelectorAll('circle')].some(
-      (node) => node.getAttribute('r') === '15',
+      (node) => node.getAttribute('r') === '16.5',
     );
     expect(big).toBe(true);
   });
@@ -100,6 +110,10 @@ describe('牌面の意匠', () => {
     const fiveSvg = faceOf(five.container);
     expect(fiveSvg.querySelectorAll('g.bamboo')).toHaveLength(5);
     expect(fiveSvg.innerHTML).toContain('fill="#bf4133"');
+    // 竹は幅 7.2・高さ 22。
+    const rod = fiveSvg.querySelector('g.bamboo rect');
+    expect(rod?.getAttribute('width')).toBe('7.2');
+    expect(rod?.getAttribute('height')).toBe('22');
 
     const nine = render(<Tile tile={{ suit: 's', rank: 9 }} />);
     expect(faceOf(nine.container).querySelectorAll('g.bamboo')).toHaveLength(9);
@@ -175,12 +189,12 @@ describe('赤 5・状態・サイズ', () => {
     const sm = render(<Tile tile={{ suit: 'm', rank: 1 }} size="sm" />);
     expect(
       within(sm.container).getByRole('img', { name: '一萬' }).className,
-    ).toContain('w-[30px]');
+    ).toContain('w-[32px]');
 
     const lg = render(<Tile tile={{ suit: 'm', rank: 1 }} size="lg" />);
     expect(
       within(lg.container).getByRole('img', { name: '一萬' }).className,
-    ).toContain('w-[52px]');
+    ).toContain('w-[58px]');
   });
 
   it('和了牌は金の縁・ラベル・aria-label を持つ', () => {
@@ -219,6 +233,7 @@ describe('tileFaceSvg', () => {
     const marked = tileFaceSvg({ suit: 'p', rank: 3 }, { showSuitMark: true });
     const plain = tileFaceSvg({ suit: 'p', rank: 3 });
     expect(marked).toContain('>筒</text>');
+    expect(marked).toContain('font-size="8.5"');
     expect(plain).not.toContain('>筒</text>');
     expect(marked).toContain('data-face="p"');
   });

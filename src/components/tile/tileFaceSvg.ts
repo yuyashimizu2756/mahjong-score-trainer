@@ -86,13 +86,13 @@ const PIP_POSITIONS: Record<number, ReadonlyArray<readonly [number, number]>> = 
     [68, 76],
   ],
   7: [
-    [32, 22],
+    [22, 22],
     [50, 22],
-    [68, 22],
-    [40, 50],
-    [60, 50],
-    [40, 76],
-    [60, 76],
+    [78, 22],
+    [34, 50],
+    [66, 50],
+    [34, 76],
+    [66, 76],
   ],
   8: [
     [32, 18],
@@ -105,15 +105,15 @@ const PIP_POSITIONS: Record<number, ReadonlyArray<readonly [number, number]>> = 
     [68, 82],
   ],
   9: [
-    [28, 22],
+    [22, 22],
     [50, 22],
-    [72, 22],
-    [28, 50],
+    [78, 22],
+    [22, 50],
     [50, 50],
-    [72, 50],
-    [28, 78],
+    [78, 50],
+    [22, 78],
     [50, 78],
-    [72, 78],
+    [78, 78],
   ],
 };
 
@@ -157,8 +157,8 @@ function pip(
     : TILE_FACE_COLORS.pinGreen;
   const center = red ? TILE_FACE_COLORS.vermilion : TILE_FACE_COLORS.pinBlue;
   const parts = [
-    `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(r)}" fill="${TILE_FACE_COLORS.ivory}" stroke="${stroke}" stroke-width="${big ? 2.2 : 1.7}" />`,
-    `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(r * 0.62)}" fill="none" stroke="${middle}" stroke-width="${big ? 1.4 : 1.1}" />`,
+    `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(r)}" fill="${TILE_FACE_COLORS.ivory}" stroke="${stroke}" stroke-width="${big ? 2.4 : 1.9}" />`,
+    `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(r * 0.62)}" fill="none" stroke="${middle}" stroke-width="${big ? 1.5 : 1.25}" />`,
     `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(r * 0.3)}" fill="${center}" />`,
   ];
   if (big) {
@@ -177,7 +177,7 @@ function pip(
 function pinFace(rank: number, red: boolean): string {
   const positions = PIP_POSITIONS[rank] ?? PIP_POSITIONS[1];
   const big = rank === 1;
-  const radius = big ? 15 : 7.2;
+  const radius = big ? 16.5 : 8.4;
   const parts: string[] = [];
   positions.forEach(([x, y], index) => {
     const [cx, cy] = point(x, y);
@@ -192,7 +192,7 @@ function bamboo(x: number, y: number, scale: number, red: boolean): string {
   const fill = red ? TILE_FACE_COLORS.vermilion : TILE_FACE_COLORS.souGreen;
   const dark = red ? '#8f2a22' : TILE_FACE_COLORS.souGreenDark;
   const light = red ? TILE_FACE_COLORS.vermilionLight : TILE_FACE_COLORS.souGreenLight;
-  return `<g class="bamboo" transform="translate(${n(x)} ${n(y)}) scale(${n(scale)})"><rect x="-3.2" y="-10.5" width="6.4" height="21" rx="3.2" fill="${fill}" stroke="${dark}" stroke-width="0.8" /><rect x="-2.1" y="-9" width="1.5" height="18" rx="0.75" fill="${light}" opacity="0.75" /><path d="M-3.1 -3.6 H3.1 M-3.1 2.6 H3.1" stroke="${dark}" stroke-width="0.9" opacity="0.6" fill="none" /><path d="M0 -10 C1.8 -13.5, 4.8 -14, 6.8 -14.6 C4.8 -10.5, 3 -9.2, 0 -8.8 Z" fill="${light}" stroke="${dark}" stroke-width="0.4" /></g>`;
+  return `<g class="bamboo" transform="translate(${n(x)} ${n(y)}) scale(${n(scale)})"><rect x="-3.6" y="-11" width="7.2" height="22" rx="3.6" fill="${fill}" stroke="${dark}" stroke-width="0.85" /><rect x="-2.4" y="-9.5" width="1.7" height="19" rx="0.85" fill="${light}" opacity="0.75" /><path d="M-3.5 -3.9 H3.5 M-3.5 2.9 H3.5" stroke="${dark}" stroke-width="1.05" opacity="0.65" fill="none" /><path d="M0 -10.5 C1.9 -14.2, 5.2 -14.8, 7.4 -15.4 C5.2 -11, 3.2 -9.6, 0 -9.2 Z" fill="${light}" stroke="${dark}" stroke-width="0.45" /></g>`;
 }
 
 function peacock(): string {
@@ -200,28 +200,31 @@ function peacock(): string {
   const dark = TILE_FACE_COLORS.souGreenDark;
   const red = TILE_FACE_COLORS.vermilion;
   return [
-    '<g class="peacock" transform="translate(36 54)">',
-    // 尾羽（扇状）。先端だけ朱。
-    '<path d="M-4 6 C-20 16, -17 22, -15 28" fill="none" stroke="' + green + '" stroke-width="2.4" stroke-linecap="round" />',
-    '<path d="M0 8 C-7 22, -2 25, 0 31" fill="none" stroke="' + green + '" stroke-width="2.4" stroke-linecap="round" />',
-    '<path d="M4 6 C20 16, 17 22, 15 28" fill="none" stroke="' + green + '" stroke-width="2.4" stroke-linecap="round" />',
-    `<circle cx="-15" cy="28" r="2" fill="${red}" />`,
-    `<circle cx="0" cy="31" r="2" fill="${red}" />`,
-    `<circle cx="15" cy="28" r="2" fill="${red}" />`,
-    // 胴
-    `<ellipse cx="0" cy="0" rx="8" ry="10.5" fill="${green}" stroke="${dark}" stroke-width="1" />`,
-    `<path d="M-6 -2 C-13 4, -8 13, 1 12 C-4 7, -4 3, -1 -1 Z" fill="#3f9562" />`,
+    '<g class="peacock" transform="translate(36 52)">',
+    // 尾羽 5 本。胴の後ろ（左）から扇状に広げ、先端に朱の丸を置く。
+    `<path d="M-7 1 C-16 -1, -21 0, -24 2" fill="none" stroke="${green}" stroke-width="2.8" stroke-linecap="round" />`,
+    `<path d="M-7 3 C-17 5, -22 7, -24 10" fill="none" stroke="${green}" stroke-width="2.8" stroke-linecap="round" />`,
+    `<path d="M-6 6 C-15 10, -18 15, -19 18" fill="none" stroke="${green}" stroke-width="2.8" stroke-linecap="round" />`,
+    `<path d="M-5 8 C-11 15, -12 21, -11 25" fill="none" stroke="${green}" stroke-width="2.8" stroke-linecap="round" />`,
+    `<path d="M-4 9 C-2 17, 0 23, -1 27" fill="none" stroke="${green}" stroke-width="2.8" stroke-linecap="round" />`,
+    `<circle cx="-24" cy="2" r="2.1" fill="${red}" />`,
+    `<circle cx="-24" cy="10" r="2.1" fill="${red}" />`,
+    `<circle cx="-19" cy="18" r="2.1" fill="${red}" />`,
+    `<circle cx="-11" cy="25" r="2.1" fill="${red}" />`,
+    `<circle cx="-1" cy="27" r="2.1" fill="${red}" />`,
+    // 胴（大きく丸く）
+    `<ellipse cx="0" cy="2" rx="10" ry="12" fill="${green}" stroke="${dark}" stroke-width="1" />`,
+    `<path d="M-7 -1 C-14 4, -9 13, 2 12 C-4 7, -4 3, 0 -2 Z" fill="#3f9562" />`,
     // 首・頭
-    `<path d="M2 -7 C4 -11, 6 -12, 7 -14" fill="none" stroke="${green}" stroke-width="4" stroke-linecap="round" />`,
-    `<circle cx="7" cy="-16" r="4.4" fill="${green}" stroke="${dark}" stroke-width="0.8" />`,
+    `<path d="M4 -8 C5.5 -10.5, 7 -12, 8.5 -13.5" fill="none" stroke="${green}" stroke-width="5" stroke-linecap="round" />`,
+    `<circle cx="9" cy="-15" r="5.5" fill="${green}" stroke="${dark}" stroke-width="0.9" />`,
     // 金の嘴
-    `<path d="M11 -16 L16 -14.5 L11 -13 Z" fill="${TILE_FACE_COLORS.gold}" />`,
-    `<circle cx="8.2" cy="-17.3" r="1" fill="${TILE_FACE_COLORS.ivory}" />`,
-    `<circle cx="8.4" cy="-17.3" r="0.5" fill="${TILE_FACE_COLORS.ink}" />`,
+    `<path d="M14 -15.8 L19.5 -13.9 L14 -12.6 Z" fill="${TILE_FACE_COLORS.gold}" />`,
+    `<circle cx="10.8" cy="-16.4" r="1.1" fill="${TILE_FACE_COLORS.ivory}" />`,
+    `<circle cx="11" cy="-16.4" r="0.55" fill="${TILE_FACE_COLORS.ink}" />`,
     // 冠羽
-    `<path d="M6 -20 L4.5 -24 M7.5 -20 L7.5 -25 M9 -20 L10.5 -24" stroke="${green}" stroke-width="1.2" stroke-linecap="round" />`,
-    // 脚
-    `<path d="M-2 10 L-2 15 M3 10 L3 15 M-5 15 H1 M0 15 H6" stroke="${dark}" stroke-width="1.1" stroke-linecap="round" />`,
+    `<path d="M7.5 -20 L6.5 -25 M9 -20.5 L9.5 -26 M10.5 -20 L12 -24.5" stroke="${green}" stroke-width="1.4" stroke-linecap="round" />`,
+    // 脚は描かない（40px でも棒人間に見えないようにする）。
     '</g>',
   ].join('');
 }
@@ -229,7 +232,7 @@ function peacock(): string {
 function souFace(rank: number, red: boolean): string {
   if (rank === 1) return peacock();
   const positions = PIP_POSITIONS[rank] ?? PIP_POSITIONS[1];
-  const scale = rank >= 8 ? 0.78 : rank === 7 ? 0.84 : 0.92;
+  const scale = rank === 8 ? 0.78 : rank >= 7 ? 0.84 : 0.92;
   const rods: string[] = [];
   positions.forEach(([x, y], index) => {
     const [cx, cy] = point(x, y);
@@ -282,12 +285,12 @@ export function tileFaceSvg(tile: Tile, options: TileFaceOptions = {}): string {
           : honorFace(tile.rank);
 
   const mark =
-    options.showSuitMark && tile.suit !== 'z'
+    options.showSuitMark && (tile.suit === 'p' || tile.suit === 's')
       ? svgText(
           36,
           95,
           SUIT_MARK[tile.suit],
-          7.5,
+          8.5,
           red ? '#8f2a22' : TILE_FACE_COLORS.inkSoft,
           600,
         )
