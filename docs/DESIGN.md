@@ -39,6 +39,7 @@
 - Vite 8 + React 19 + TypeScript 7
 - Tailwind CSS 4（`@tailwindcss/vite`）
 - Vitest 5 + @testing-library/react + jsdom
+- Three.js（`three`）は練習の「リアル 3D」モードだけが動的 import する
 - `vite-plugin-singlefile` で `dist/index.html` に全アセットをインライン化
 - ルーターは使わない（タブ状態のみ）。URL ハッシュで画面を保持してよい。
 - 永続化は `src/lib/storage.ts` に集約（キーは `mst:v1:*`、スキーマ版を持つ）。
@@ -61,6 +62,7 @@ src/
     index.ts
   features/
     home/ learn/ memorize/ practice/ chart/ yaku/ settings/
+    practice/scene/  # 3D（layout / textures / camera / Three.js）
   components/      # Tile, Hand, Meld, Layout, 選択肢, ゲージ等
   lib/             # storage, format, rng, classnames, srs
   styles/
@@ -168,12 +170,31 @@ export function generateProblem(opts: {
 
 出題の選択肢（UI 側）は、正解に近い誤答（符だけ違う/翻だけ違う/満貫境界）を優先して 3 つ作る。
 
+## 3D 牌卓（Issue #5）
+
+練習の出題カードの手牌だけを 3 モードで描く。エンジン・採点ロジックには触れない。
+
+- 設定は `Settings.displayMode: '2d' | 'css3d' | 'three'`（既定 `css3d`）。
+  `displayMode` を持たない古い localStorage は `css3d` として読む。
+- CSS 3D は追加依存なし。`perspective` + `rotateX(14deg)` + 牌ごとの `translateZ`。
+- Three.js は `React.lazy(() => import('./scene/ThreeHand'))` で分離し、3D を選んだときだけ評価する。
+  jsdom・WebGL 非対応環境では `isWebGLAvailable()` が false になり、読み込まずに CSS 3D を出す。
+- `src/features/practice/scene/` の構成:
+  - `layout.ts` — 手牌・副露・和了牌・ドラ表示牌の座標（純粋関数）
+  - `textures.ts` — 牌 → テクスチャキー（38 種）と CanvasTexture の元 Canvas
+  - `camera.ts` — OrthographicCamera の軌道（±25° / ±10°）
+  - `handText.ts` — 読み上げ用の「二萬 三萬 …（和了牌）」
+  - `webgl.ts` — WebGL 判定
+  - `three-hand.ts` — シーン生成・on-demand render・dispose
+  - `ThreeHand.tsx` — React との接続（動的 import の入口）
+  - `HandStage.tsx` — モード切替・フォールバック・アクセシビリティ
+- サイズ: three を含む単一 HTML は gzip 約 275KB（予算 400KB）。外部リクエスト 0。
+
 ## UI 要件
 
 - 日本語 UI。専門用語には読み（ルビまたは括弧書き）を添える。
 - 牌は CSS のみで描画（萬子=赤系、筒子=青系、索子=緑系、字牌=墨）。赤 5 は朱色。
-- 練習の回答は「翻 → 符 → 点数の順に 1 問ずつ」と「まとめて 4 択」の 2 方式。設定で切替。
-- 採点後は必ず、成立役（翻数）・符の内訳（+20 副底 など）・基本点の式・点数表の該当セルを同時に表示する。
+- 練習の回答は「翻 → 符 → 点数の順に 1 問ずつ」と「まとめて 4 択」の 2 方式。設定で切替。- 採点後は必ず、成立役（翻数）・符の内訳（+20 副底 など）・基本点の式・点数表の該当セルを同時に表示する。
 - 間違えた問題は復習キューに入り、セッション末尾または「復習」タブで再出題される。
 - キーボード: `1`〜`4` 選択、`Enter` 確定/次へ、`R` 復習に追加、`?` ヘルプ。
 - 効果音は既定オフ（明示的に有効化した場合のみ鳴らす。v0.1.0 では実装しない）。

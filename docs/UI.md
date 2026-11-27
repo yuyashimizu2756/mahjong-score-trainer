@@ -82,6 +82,8 @@ background:
 - `aria-label` は「五萬」「東」など。SVG は `aria-hidden`。`data-tile` / `data-red` / `data-highlight` を維持する。
 - 牌面の SVG 文字列は `src/components/tile/tileFaceSvg.ts` の `tileFaceSvg(tile)` が返す純粋関数。
   同じ牌は常に同じ文字列になり、3D（Three.js の CanvasTexture）からも再利用できる。
+- 3D のテクスチャキーは `src/features/practice/scene/textures.ts`。34 種 + 赤 5（3 種）+ 裏 = 38 種で、
+  同じ牌は常に同じキーになる。
 
 ## 画面ごとの要点
 
@@ -106,9 +108,32 @@ background:
 ### 練習
 - 上部: 難易度、問題番号、正答率、連続。
 - 中央: 場況チップ（自風・場風・ツモ/ロン・リーチ・ドラ・本場・供託）→ 手牌 → 和了牌。
+- 手牌だけを 2D / CSS 3D / リアル 3D（Three.js）で切り替えられる。回答 UI・解説・結果パネルは 2D のまま。
 - 下部: 回答 UI。4 択は 2×2 の大きなボタン。ステップは翻 → 符 → 点数の 3 段。
 - 採点後はカードをめくるように結果 panel を開く。点数は金の大きな数字。
 - 「次へ」は Enter。結果 panel の下に「点数表で見る」「復習に追加」。
+
+### 手牌の表示モード
+- 設定の「表示モード」で選ぶ。既定は CSS 3D。`displayMode: '2d' | 'css3d' | 'three'`。
+- **2D**: 傾けない。軽量で最も読みやすい。
+- **CSS 3D**: 手牌コンテナに `perspective(1200px) rotateX(14deg)`。牌は `translateZ(6px)`、和了牌は
+  `translateZ(14px)` で浮かせる。牌の下に接地域の影、和了牌は金の縁と淡い発光。
+  副露は既存どおり右端の鳴き牌を 90 度回す。360px では 2〜3 段に折り返す。
+  `prefers-reduced-motion: reduce` ではホバーとトランジションを止め、傾きだけ残す。
+- **リアル 3D（Three.js）**: `React.lazy` + 動的 import。選んだときだけ読み込む。
+  - 深緑のフェルト（roughness 0.97）、角丸の直方体（幅:高さ:厚み = 1 : 1.35 : 0.55）。
+  - 牌面は `tileFaceSvg(tile, { showSuitMark: false })` を Canvas に描いた `CanvasTexture`
+    （牌種ごとにキャッシュ、赤 5・字牌・裏を含む）。
+  - 和了牌は金の縁 + emissive、ドラ表示牌は卓の右上に 0.62 倍で置く。
+  - `OrthographicCamera` を `(0, 7.5, 9.5)` 付近から `lookAt(0, 0, 0)`。ドラッグで水平 ±25°、
+    垂直 ±10°。ホイールは奪わない。「視点をリセット」ボタンとダブルクリックで戻す。
+  - HemisphereLight + DirectionalLight + `Plane` + `ShadowMaterial` の接地影、`ACESFilmicToneMapping`。
+  - DPR は最大 2、`ResizeObserver`、変化時だけ RAF を 1 回。タブ非表示・画面外では停止。
+    アンマウント時に geometry / material / texture / renderer を dispose。
+  - WebGL が使えない・読み込みに失敗した場合は CSS 3D に自動で戻し、その旨を表示する。
+  - canvas は `aria-hidden="true"`。同じ手牌を「二萬 三萬 …（和了牌）」の DOM テキストでも出し、
+    「和了牌: 六索」のラベルも添える。回答・ヒント・次へはすべて DOM のボタン。
+  - 狭い画面では牌が小さくなるため、CSS 3D / 2D を推奨する。
 
 ### 点数表
 - タブ 4 つ。表は横スクロール可。ヘッダー固定。
@@ -121,14 +146,16 @@ background:
 - 苦手役は「苦手」バッジ。
 
 ### 設定
-- セクション: 回答方式 / 出題 / 表示 / データ。
+- セクション: 回答方式 / 出題 / 表示モード / 表示 / データ。
+- 表示モードは 2D / CSS 3D / リアル 3D の 3 枚のカードで、それぞれ小さなプレビューを添える。選択は即時反映・保存。
 - 破壊的操作は朱の枠線ボタン + 確認ダイアログ。
 
 ## モーション
 
 - 160〜240ms、`ease-out`。結果 panel は 8px 上からフェード。
 - 連続正解は数字だけ 1.04 倍に弾ませる。
-- `prefers-reduced-motion: reduce` では全て 0ms。
+- CSS 3D の牌は 160ms で浮き上がる。3D の視点移動はドラッグに直接追従し、慣性アニメーションはしない。
+- `prefers-reduced-motion: reduce` では全て 0ms。CSS 3D は傾きを保ち、ホバーとトランジションだけ止める。
 
 ## アクセシビリティ
 
